@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import WorldMap from './components/WorldMap';
+import ThreatFeed from './components/ThreatFeed';
 
 // Types
 interface Threat {
@@ -135,7 +137,12 @@ function Header() {
             </div>
             <div className="flex items-center gap-2">
               <span className="status-dot status-danger animate-blink"></span>
-              <span className="text-xs text-red-400 font-mono">MENACES: <span id="threat-count">247</span></span>
+              <span className="text-xs text-red-400 font-mono">MENACES: 247</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-cyan-400 font-mono">
+                <i className="fas fa-bolt mr-1"></i>BRAVE API
+              </span>
             </div>
           </div>
           <div className="text-right">
@@ -172,73 +179,6 @@ function StatsPanel({ threats, anomalies, vpnNodes, seoTargets }: { threats: Thr
           </div>
         </div>
       ))}
-    </div>
-  );
-}
-
-function ThreatMap() {
-  const [dots, setDots] = useState<{x: number, y: number, id: number}[]>([]);
-  
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setDots(prev => {
-        const newDots = [...prev, { x: Math.random() * 100, y: Math.random() * 100, id: Date.now() }];
-        return newDots.slice(-20);
-      });
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <div className="card-cyber p-5">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-          <i className="fas fa-globe text-cyan-400"></i>
-          Carte Mondiale des Menaces
-        </h3>
-        <span className="text-xs font-mono text-green-400 animate-blink">● LIVE</span>
-      </div>
-      <div className="relative w-full h-64 bg-[#0a0e1a] rounded-lg overflow-hidden border border-gray-800">
-        {/* Grid overlay */}
-        <div className="absolute inset-0 cyber-grid opacity-50"></div>
-        
-        {/* Simplified world map representation */}
-        <svg className="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 800 400">
-          {/* Continents simplified */}
-          <path d="M150,100 Q200,80 250,100 Q280,120 260,150 Q240,180 200,170 Q160,160 150,130 Z" fill="#00ff88" opacity="0.3"/>
-          <path d="M350,80 Q450,60 550,80 Q580,100 560,140 Q540,180 480,200 Q420,220 380,180 Q340,140 350,100 Z" fill="#00ff88" opacity="0.3"/>
-          <path d="M500,100 Q600,80 700,120 Q720,160 680,200 Q640,240 580,220 Q520,200 500,160 Z" fill="#00ff88" opacity="0.3"/>
-          <path d="M180,200 Q220,180 260,200 Q280,240 240,280 Q200,300 180,260 Z" fill="#00ff88" opacity="0.3"/>
-          <path d="M600,250 Q650,230 700,260 Q720,300 680,320 Q640,340 600,300 Z" fill="#00ff88" opacity="0.3"/>
-        </svg>
-        
-        {/* Attack dots */}
-        {dots.map(dot => (
-          <div
-            key={dot.id}
-            className="absolute w-2 h-2 rounded-full bg-red-500 animate-ping"
-            style={{ left: `${dot.x}%`, top: `${dot.y}%` }}
-          />
-        ))}
-        
-        {/* Radar sweep */}
-        <div className="absolute top-1/2 left-1/2 w-32 h-32 -translate-x-1/2 -translate-y-1/2">
-          <div className="w-full h-full rounded-full border border-green-500/20 animate-radar">
-            <div className="absolute top-0 left-1/2 w-0.5 h-1/2 bg-gradient-to-b from-green-400 to-transparent origin-bottom"></div>
-          </div>
-        </div>
-        
-        {/* Stats overlay */}
-        <div className="absolute bottom-2 left-2 text-xs font-mono text-green-400/70">
-          <div>SCAN: ACTIF</div>
-          <div>NODES: 1,247</div>
-          <div>LATENCE: 12ms</div>
-        </div>
-        <div className="absolute top-2 right-2 text-xs font-mono text-red-400/70">
-          <div>ALERTE NIVEAU: ÉLEVÉ</div>
-          <div>ATTAQUES/24H: 2,847</div>
-        </div>
-      </div>
     </div>
   );
 }
@@ -509,6 +449,8 @@ function ConsoleLog() {
       '[PHISH] Page de phishing identifiée: ',
       '[DMCA] Takedown request envoyée pour: ',
       '[NET] Anomalie de trafic sur segment B-7',
+      '[BRAVE] Recherche threat intelligence en cours...',
+      '[API] Brave Search - Résultats indexés: ',
     ];
     const log = actions[Math.floor(Math.random() * actions.length)] + ipGen();
     return `[${new Date().toLocaleTimeString('fr-FR')}] ${log}`;
@@ -533,7 +475,7 @@ function ConsoleLog() {
       </div>
       <div className="bg-black/50 rounded-lg p-3 font-mono text-xs max-h-48 overflow-y-auto border border-gray-800">
         {logs.map((log, i) => (
-          <div key={i} className={`py-0.5 ${log.includes('[ALERT]') || log.includes('[BLOCK]') ? 'text-red-400' : log.includes('[SEO]') || log.includes('[DMCA]') ? 'text-green-400' : log.includes('[TOR]') || log.includes('[VPN]') ? 'text-purple-400' : 'text-gray-400'}`}>
+          <div key={i} className={`py-0.5 ${log.includes('[ALERT]') || log.includes('[BLOCK]') ? 'text-red-400' : log.includes('[SEO]') || log.includes('[DMCA]') ? 'text-green-400' : log.includes('[TOR]') || log.includes('[VPN]') ? 'text-purple-400' : log.includes('[BRAVE]') || log.includes('[API]') ? 'text-cyan-400' : 'text-gray-400'}`}>
             {log}
           </div>
         ))}
@@ -547,9 +489,10 @@ function NavigationTabs({ activeTab, setActiveTab }: { activeTab: string, setAct
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: 'fa-gauge-high' },
     { id: 'threats', label: 'Menaces', icon: 'fa-skull-crossbones' },
+    { id: 'map', label: 'Carte Monde', icon: 'fa-globe' },
     { id: 'vpn', label: 'VPN/Tor', icon: 'fa-user-secret' },
     { id: 'seo', label: 'SEO/AEO', icon: 'fa-spider' },
-    { id: 'network', label: 'Réseau', icon: 'fa-network-wired' },
+    { id: 'intel', label: 'Renseignement', icon: 'fa-rss' },
   ];
 
   return (
@@ -591,8 +534,11 @@ export default function App() {
           <div className="space-y-6">
             <StatsPanel threats={threats} anomalies={anomalies} vpnNodes={vpnNodes} seoTargets={seoTargets} />
             
+            {/* World Map - Full width */}
+            <WorldMap />
+            
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <ThreatMap />
+              <ThreatFeed />
               <NetworkMonitor />
             </div>
             
@@ -611,9 +557,29 @@ export default function App() {
         {activeTab === 'threats' && (
           <div className="space-y-6">
             <StatsPanel threats={threats} anomalies={anomalies} vpnNodes={vpnNodes} seoTargets={seoTargets} />
-            <ThreatMap />
-            <ThreatList threats={threats} />
+            <WorldMap />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ThreatList threats={threats} />
+              <ThreatFeed />
+            </div>
             <ConsoleLog />
+          </div>
+        )}
+
+        {activeTab === 'map' && (
+          <div className="space-y-6">
+            <div className="card-cyber p-6">
+              <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                <i className="fas fa-globe text-cyan-400"></i>
+                Carte Mondiale des Menaces - Géolocalisation Temps Réel
+              </h2>
+              <p className="text-sm text-gray-400">Visualisation en temps réel des attaques cyber détectées à travers le monde. Chaque point représente une menace active géolocalisée par notre système de traque.</p>
+            </div>
+            <WorldMap />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <NetworkMonitor />
+              <ConsoleLog />
+            </div>
           </div>
         )}
 
@@ -658,11 +624,20 @@ export default function App() {
           </div>
         )}
 
-        {activeTab === 'network' && (
+        {activeTab === 'intel' && (
           <div className="space-y-6">
-            <NetworkMonitor />
-            <AnomalyDetector anomalies={anomalies} />
-            <ConsoleLog />
+            <div className="card-cyber p-6">
+              <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                <i className="fas fa-rss text-orange-400"></i>
+                Renseignement Cyber - Brave Search API
+              </h2>
+              <p className="text-sm text-gray-400">Collecte de renseignements en temps réel via l'API Brave Search. Recherche de menaces, fuites de données, malware et sites frauduleux.</p>
+            </div>
+            <ThreatFeed />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ConsoleLog />
+              <NetworkMonitor />
+            </div>
           </div>
         )}
       </main>
@@ -671,14 +646,17 @@ export default function App() {
       <footer className="border-t border-gray-800 mt-8 py-4">
         <div className="max-w-[1600px] mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-2">
           <p className="text-xs text-gray-500 font-mono">
-            CYBERTRACKER PRO v3.7.2 • Système de Lutte Anti-Cybercriminalité
+            CYBERTRACKER PRO v4.0.0 • Système de Lutte Anti-Cybercriminalité • Brave Search API Active
           </p>
           <div className="flex items-center gap-4">
             <span className="text-xs text-gray-500 font-mono">
-              <i className="fas fa-lock text-green-400 mr-1"></i>Connexion chiffrée AES-256
+              <i className="fas fa-lock text-green-400 mr-1"></i>AES-256
             </span>
             <span className="text-xs text-gray-500 font-mono">
-              <i className="fas fa-server text-cyan-400 mr-1"></i>Nodes: 1,247 actifs
+              <i className="fas fa-server text-cyan-400 mr-1"></i>1,247 Nodes
+            </span>
+            <span className="text-xs text-gray-500 font-mono">
+              <i className="fas fa-bolt text-orange-400 mr-1"></i>Brave API
             </span>
           </div>
         </div>
