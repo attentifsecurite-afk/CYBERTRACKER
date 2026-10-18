@@ -9,10 +9,8 @@ interface SEOTarget {
   riskLevel: number;
   action: string;
   domainAuthority: number;
-  pageRank: number;
   indexed: boolean;
   lastChecked: string;
-  traffic: number;
 }
 
 const domains = [
@@ -34,33 +32,30 @@ export default function SEOPage() {
       riskLevel: Math.floor(Math.random() * 100),
       action: actions[Math.floor(Math.random() * actions.length)],
       domainAuthority: Math.floor(Math.random() * 100),
-      pageRank: Math.floor(Math.random() * 10),
       indexed: Math.random() > 0.3,
       lastChecked: new Date(Date.now() - Math.random() * 86400000).toLocaleString('fr-FR'),
-      traffic: Math.floor(Math.random() * 50000)
     }))
   );
 
   const [statusFilter, setStatusFilter] = useState<string>('all');
-
   const filteredTargets = seoTargets.filter(t => statusFilter === 'all' || t.status === statusFilter);
 
   const getStatusColor = (status: string) => {
     switch(status) {
-      case 'dereferenced': return 'text-green-400 bg-green-500/20 border-green-500/50';
-      case 'blocked': return 'text-cyan-400 bg-cyan-500/20 border-cyan-500/50';
-      case 'processing': return 'text-yellow-400 bg-yellow-500/20 border-yellow-500/50';
-      default: return 'text-gray-400 bg-gray-500/20 border-gray-500/50';
+      case 'dereferenced': return 'bg-green-500/20 text-green-400 border-green-500/50';
+      case 'blocked': return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/50';
+      case 'processing': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50';
+      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/50';
     }
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="card-cyber p-6">
-        <h2 className="text-2xl font-bold text-white flex items-center gap-3 mb-2">
-          <i className="fas fa-spider text-green-400"></i>
-          Moteur SEO/AEO - Déréférencement & Maillage Inverse
+      <div className="glass-card p-6">
+        <h2 className="text-3xl font-bold neon-text-green font-orbitron flex items-center gap-3 mb-2">
+          <i className="fas fa-spider"></i>
+          Moteur SEO/AEO - Déréférencement
         </h2>
         <p className="text-sm text-gray-400">
           Système de déréférencement des sites frauduleux, phishing, et atteinte aux personnes. Maillage SEO inverse pour neutraliser le référencement des sites malveillants.
@@ -68,39 +63,39 @@ export default function SEOPage() {
 
         {/* Strategy Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-          <div className="p-4 bg-[#0a0e1a] rounded-lg border border-gray-800">
+          <div className="p-4 bg-black/40 rounded-lg border border-cyan-500/30 hover:border-cyan-500/60 transition-all">
             <div className="flex items-center gap-2 mb-2">
-              <i className="fas fa-arrow-down text-cyan-400"></i>
-              <h4 className="text-sm font-semibold text-cyan-400">SEO Inverse</h4>
+              <i className="fas fa-arrow-down neon-text-blue"></i>
+              <h4 className="text-sm font-bold neon-text-blue font-orbitron">SEO INVERSE</h4>
             </div>
             <p className="text-xs text-gray-400">
               Création de signaux négatifs pour déclasser les sites frauduleux dans les résultats de recherche Google, Bing, DuckDuckGo.
             </p>
-            <div className="mt-2 text-xs text-green-400 font-mono">
+            <div className="mt-2 text-xs neon-text-green font-mono">
               {seoTargets.filter(s => s.status === 'dereferenced').length} sites déclassés
             </div>
           </div>
-          <div className="p-4 bg-[#0a0e1a] rounded-lg border border-gray-800">
+          <div className="p-4 bg-black/40 rounded-lg border border-green-500/30 hover:border-green-500/60 transition-all">
             <div className="flex items-center gap-2 mb-2">
-              <i className="fas fa-robot text-green-400"></i>
-              <h4 className="text-sm font-semibold text-green-400">AEO (Answer Engine)</h4>
+              <i className="fas fa-robot neon-text-green"></i>
+              <h4 className="text-sm font-bold neon-text-green font-orbitron">AEO (ANSWER ENGINE)</h4>
             </div>
             <p className="text-xs text-gray-400">
               Optimisation pour les moteurs de réponse IA (ChatGPT, Perplexity, Bard) afin de bloquer les contenus frauduleux.
             </p>
-            <div className="mt-2 text-xs text-green-400 font-mono">
+            <div className="mt-2 text-xs neon-text-green font-mono">
               {Math.floor(seoTargets.length * 0.7)} IA mises à jour
             </div>
           </div>
-          <div className="p-4 bg-[#0a0e1a] rounded-lg border border-gray-800">
+          <div className="p-4 bg-black/40 rounded-lg border border-purple-500/30 hover:border-purple-500/60 transition-all">
             <div className="flex items-center gap-2 mb-2">
-              <i className="fas fa-link text-purple-400"></i>
-              <h4 className="text-sm font-semibold text-purple-400">Maillage Inverse</h4>
+              <i className="fas fa-link neon-text-purple"></i>
+              <h4 className="text-sm font-bold neon-text-purple font-orbitron">MAILLAGE INVERSE</h4>
             </div>
             <p className="text-xs text-gray-400">
               Analyse et neutralisation des backlinks toxiques pointant vers les sites malveillants. Signalement aux webmasters.
             </p>
-            <div className="mt-2 text-xs text-green-400 font-mono">
+            <div className="mt-2 text-xs neon-text-green font-mono">
               {seoTargets.reduce((acc, t) => acc + t.backlinks, 0).toLocaleString()} backlinks neutralisés
             </div>
           </div>
@@ -109,35 +104,33 @@ export default function SEOPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="card-cyber p-4 text-center">
-          <p className="text-3xl font-bold text-green-400 font-mono">{seoTargets.filter(s => s.status === 'dereferenced').length}</p>
-          <p className="text-xs text-gray-400">Déréférencés</p>
+        <div className="glass-card p-4 text-center">
+          <p className="text-3xl font-bold neon-text-green font-orbitron">{seoTargets.filter(s => s.status === 'dereferenced').length}</p>
+          <p className="text-xs text-gray-400 uppercase tracking-wider">Déréférencés</p>
         </div>
-        <div className="card-cyber p-4 text-center">
-          <p className="text-3xl font-bold text-cyan-400 font-mono">{seoTargets.filter(s => s.status === 'blocked').length}</p>
-          <p className="text-xs text-gray-400">Bloqués</p>
+        <div className="glass-card p-4 text-center">
+          <p className="text-3xl font-bold neon-text-blue font-orbitron">{seoTargets.filter(s => s.status === 'blocked').length}</p>
+          <p className="text-xs text-gray-400 uppercase tracking-wider">Bloqués</p>
         </div>
-        <div className="card-cyber p-4 text-center">
-          <p className="text-3xl font-bold text-yellow-400 font-mono">{seoTargets.filter(s => s.status === 'processing').length}</p>
-          <p className="text-xs text-gray-400">En cours</p>
+        <div className="glass-card p-4 text-center">
+          <p className="text-3xl font-bold neon-text-orange font-orbitron">{seoTargets.filter(s => s.status === 'processing').length}</p>
+          <p className="text-xs text-gray-400 uppercase tracking-wider">En cours</p>
         </div>
-        <div className="card-cyber p-4 text-center">
-          <p className="text-3xl font-bold text-gray-400 font-mono">{seoTargets.filter(s => s.status === 'pending').length}</p>
-          <p className="text-xs text-gray-400">En attente</p>
+        <div className="glass-card p-4 text-center">
+          <p className="text-3xl font-bold text-gray-400 font-orbitron">{seoTargets.filter(s => s.status === 'pending').length}</p>
+          <p className="text-xs text-gray-400 uppercase tracking-wider">En attente</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="card-cyber p-5">
-        <h3 className="text-sm font-semibold text-white mb-3">Filtrer par Statut</h3>
+      <div className="glass-card p-5">
+        <h3 className="text-sm font-semibold neon-text-green font-orbitron mb-3 uppercase tracking-wider">Filtrer par Statut</h3>
         <div className="flex flex-wrap gap-2">
           {(['all', 'pending', 'processing', 'dereferenced', 'blocked'] as const).map(status => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
-              className={`px-3 py-1.5 rounded text-xs font-mono transition-all ${
-                statusFilter === status ? 'bg-green-500/20 text-green-400 border border-green-500/40' : 'bg-gray-800 text-gray-400 hover:text-white'
-              }`}
+              className={`cyber-tab text-xs ${statusFilter === status ? 'active' : ''}`}
             >
               {status === 'all' ? 'TOUS' : status.toUpperCase()}
             </button>
@@ -146,54 +139,54 @@ export default function SEOPage() {
       </div>
 
       {/* Targets Table */}
-      <div className="card-cyber p-5">
+      <div className="glass-card p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-white">
+          <h3 className="text-xl font-bold neon-text-green font-orbitron">
             {filteredTargets.length} Sites Ciblés
           </h3>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="cyber-table">
             <thead>
-              <tr className="border-b border-gray-800">
-                <th className="text-left text-xs text-gray-400 font-medium pb-2">Domaine</th>
-                <th className="text-left text-xs text-gray-400 font-medium pb-2">Type</th>
-                <th className="text-left text-xs text-gray-400 font-medium pb-2">Statut</th>
-                <th className="text-left text-xs text-gray-400 font-medium pb-2">DA</th>
-                <th className="text-left text-xs text-gray-400 font-medium pb-2">Backlinks</th>
-                <th className="text-left text-xs text-gray-400 font-medium pb-2">Risque</th>
-                <th className="text-left text-xs text-gray-400 font-medium pb-2">Action</th>
+              <tr>
+                <th>Domaine</th>
+                <th>Type</th>
+                <th>Statut</th>
+                <th>DA</th>
+                <th>Backlinks</th>
+                <th>Risque</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
               {filteredTargets.map((target) => (
-                <tr key={target.id} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors">
-                  <td className="py-3">
+                <tr key={target.id}>
+                  <td>
                     <div>
-                      <p className="text-xs font-mono text-white">{target.domain}</p>
+                      <p className="text-xs font-mono text-white font-bold">{target.domain}</p>
                       <p className="text-[10px] text-gray-500">{target.lastChecked}</p>
                     </div>
                   </td>
-                  <td className="py-3 text-xs text-gray-300">{target.type}</td>
-                  <td className="py-3">
-                    <span className={`px-2 py-0.5 text-[10px] font-mono rounded border ${getStatusColor(target.status)}`}>
+                  <td className="text-xs text-gray-300">{target.type}</td>
+                  <td>
+                    <span className={`px-2 py-1 text-[10px] font-mono rounded border ${getStatusColor(target.status)}`}>
                       {target.status.toUpperCase()}
                     </span>
                   </td>
-                  <td className="py-3 text-xs font-mono text-cyan-400">{target.domainAuthority}</td>
-                  <td className="py-3 text-xs font-mono text-gray-400">{target.backlinks.toLocaleString()}</td>
-                  <td className="py-3">
+                  <td className="text-xs font-mono neon-text-blue font-bold">{target.domainAuthority}</td>
+                  <td className="text-xs font-mono text-gray-400">{target.backlinks.toLocaleString()}</td>
+                  <td>
                     <div className="flex items-center gap-2">
                       <div className="w-16 h-1.5 bg-gray-800 rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full ${target.riskLevel > 70 ? 'bg-red-500' : target.riskLevel > 40 ? 'bg-orange-500' : 'bg-green-500'}`}
+                          className={`h-full rounded-full ${target.riskLevel > 70 ? 'bg-pink-500' : target.riskLevel > 40 ? 'bg-orange-500' : 'bg-green-500'}`}
                           style={{ width: `${target.riskLevel}%` }}
                         ></div>
                       </div>
                       <span className="text-xs font-mono text-gray-400">{target.riskLevel}%</span>
                     </div>
                   </td>
-                  <td className="py-3 text-xs text-purple-400">{target.action}</td>
+                  <td className="text-xs neon-text-purple">{target.action}</td>
                 </tr>
               ))}
             </tbody>
@@ -202,9 +195,9 @@ export default function SEOPage() {
       </div>
 
       {/* Actions Log */}
-      <div className="card-cyber p-5">
-        <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
-          <i className="fas fa-history text-orange-400"></i>
+      <div className="glass-card p-6">
+        <h3 className="text-xl font-bold neon-text-orange font-orbitron flex items-center gap-3 mb-4">
+          <i className="fas fa-history"></i>
           Historique des Actions
         </h3>
         <div className="space-y-2 max-h-64 overflow-y-auto">
@@ -213,10 +206,10 @@ export default function SEOPage() {
             const action = actions[Math.floor(Math.random() * actions.length)];
             const success = Math.random() > 0.2;
             return (
-              <div key={i} className="flex items-center justify-between p-2 bg-[#0a0e1a] rounded border border-gray-800">
+              <div key={i} className="flex items-center justify-between p-3 bg-black/40 rounded-lg border border-gray-800 hover:border-green-500/30 transition-all">
                 <div className="flex items-center gap-2">
-                  <i className={`fas ${success ? 'fa-check-circle text-green-400' : 'fa-times-circle text-red-400'}`}></i>
-                  <span className="text-xs text-white">{action}</span>
+                  <i className={`fas ${success ? 'fa-check-circle neon-text-green' : 'fa-times-circle neon-text-pink'}`}></i>
+                  <span className="text-xs text-white font-bold">{action}</span>
                   <span className="text-xs text-gray-400">pour {domain}</span>
                 </div>
                 <span className="text-[10px] text-gray-500 font-mono">

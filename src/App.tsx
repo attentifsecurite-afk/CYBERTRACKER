@@ -9,6 +9,13 @@ import NetworkPage from './pages/NetworkPage';
 
 function Header() {
   const [time, setTime] = useState(new Date());
+  const [systemStatus] = useState({
+    active: true,
+    threats: 247,
+    api: 'CONNECTED',
+    nodes: 1247,
+    uptime: '99.98%'
+  });
   
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -16,42 +23,62 @@ function Header() {
   }, []);
 
   return (
-    <header className="border-b border-gray-800 bg-[#0a0e1a]/90 backdrop-blur-xl sticky top-0 z-50">
-      <div className="max-w-full mx-auto px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-cyan-500 flex items-center justify-center">
-              <i className="fas fa-shield-halved text-white text-lg"></i>
+    <header className="sticky top-0 z-50 glass-card border-b border-cyan-500/20">
+      <div className="max-w-full mx-auto px-6 py-4">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 via-purple-500 to-pink-500 flex items-center justify-center animate-glow-pulse">
+                <i className="fas fa-shield-halved text-white text-xl"></i>
+              </div>
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
             </div>
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-white">
-              CYBER<span className="text-green-400">TRACKER</span> PRO
-            </h1>
-            <p className="text-xs text-gray-400 font-mono">Système de Traque de Fraude & Anti-Cybercriminalité</p>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-6">
-          <div className="hidden lg:flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="status-dot status-active"></span>
-              <span className="text-xs text-green-400 font-mono">SYSTÈME ACTIF</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="status-dot status-danger animate-blink"></span>
-              <span className="text-xs text-red-400 font-mono">MENACES: 247</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-cyan-400 font-mono">
-                <i className="fas fa-bolt mr-1"></i>BRAVE API
-              </span>
+            <div>
+              <h1 className="text-2xl font-bold font-orbitron tracking-wider">
+                <span className="neon-text-blue">CYBER</span>
+                <span className="neon-text-purple">TRACKER</span>
+              </h1>
+              <p className="text-xs text-gray-400 font-mono tracking-widest">ANTI-CYBERCRIME SYSTEM v4.0</p>
             </div>
           </div>
+          
+          {/* Status Indicators */}
+          <div className="hidden lg:flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <div className="status-indicator status-active"></div>
+              <div>
+                <p className="text-[10px] text-gray-400 uppercase">Système</p>
+                <p className="text-xs font-mono neon-text-green">ACTIF</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="status-indicator status-danger"></div>
+              <div>
+                <p className="text-[10px] text-gray-400 uppercase">Menaces</p>
+                <p className="text-xs font-mono neon-text-pink">{systemStatus.threats}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="status-indicator status-active"></div>
+              <div>
+                <p className="text-[10px] text-gray-400 uppercase">API Brave</p>
+                <p className="text-xs font-mono neon-text-blue">{systemStatus.api}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="status-indicator status-active"></div>
+              <div>
+                <p className="text-[10px] text-gray-400 uppercase">Nodes</p>
+                <p className="text-xs font-mono neon-text-purple">{systemStatus.nodes}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Time */}
           <div className="text-right">
-            <div className="text-sm font-mono text-cyan-400">{time.toLocaleTimeString('fr-FR')}</div>
-            <div className="text-xs text-gray-500 font-mono">{time.toLocaleDateString('fr-FR')}</div>
+            <div className="text-2xl font-bold font-orbitron neon-text-blue">{time.toLocaleTimeString('fr-FR')}</div>
+            <div className="text-xs text-gray-400 font-mono">{time.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
           </div>
         </div>
       </div>
@@ -71,21 +98,19 @@ function NavigationTabs({ activeTab, setActiveTab }: { activeTab: string, setAct
   ];
 
   return (
-    <div className="flex flex-wrap gap-2 mb-6">
-      {tabs.map(tab => (
-        <button
-          key={tab.id}
-          onClick={() => setActiveTab(tab.id)}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
-            activeTab === tab.id 
-              ? 'tab-active text-green-400' 
-              : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
-          }`}
-        >
-          <i className={`fas ${tab.icon}`}></i>
-          <span className="hidden sm:inline">{tab.label}</span>
-        </button>
-      ))}
+    <div className="glass-card p-2 mb-6">
+      <div className="flex flex-wrap gap-2">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`cyber-tab flex items-center gap-2 ${activeTab === tab.id ? 'active' : ''}`}
+          >
+            <i className={`fas ${tab.icon}`}></i>
+            <span className="hidden sm:inline">{tab.label}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -107,30 +132,40 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0e1a] cyber-grid">
+    <div className="min-h-screen bg-black cyber-grid-bg">
+      {/* Animated Background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+      </div>
+
       <Header />
       
-      <main className="max-w-[1600px] mx-auto px-4 py-6">
+      <main className="relative z-10 max-w-[1800px] mx-auto px-4 py-6">
         <NavigationTabs activeTab={activeTab} setActiveTab={setActiveTab} />
         {renderPage()}
       </main>
       
       {/* Footer */}
-      <footer className="border-t border-gray-800 mt-8 py-4">
-        <div className="max-w-[1600px] mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-2">
-          <p className="text-xs text-gray-500 font-mono">
-            CYBERTRACKER PRO v4.0.0 • Système de Lutte Anti-Cybercriminalité • Brave Search API Active
+      <footer className="relative z-10 glass-card mt-8 py-4 border-t border-cyan-500/20">
+        <div className="max-w-[1800px] mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-gray-400 font-mono tracking-wider">
+            CYBERTRACKER PRO v4.0 • SYSTÈME DE LUTTE ANTI-CYBERCRIMINALITÉ • TOUS SYSTÈMES ACTIFS
           </p>
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-gray-500 font-mono">
-              <i className="fas fa-lock text-green-400 mr-1"></i>AES-256
-            </span>
-            <span className="text-xs text-gray-500 font-mono">
-              <i className="fas fa-server text-cyan-400 mr-1"></i>1,247 Nodes
-            </span>
-            <span className="text-xs text-gray-500 font-mono">
-              <i className="fas fa-bolt text-orange-400 mr-1"></i>Brave API
-            </span>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <i className="fas fa-lock neon-text-green text-xs"></i>
+              <span className="text-xs text-gray-400 font-mono">AES-256</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <i className="fas fa-server neon-text-blue text-xs"></i>
+              <span className="text-xs text-gray-400 font-mono">1,247 NODES</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <i className="fas fa-bolt neon-text-purple text-xs"></i>
+              <span className="text-xs text-gray-400 font-mono">BRAVE API</span>
+            </div>
           </div>
         </div>
       </footer>

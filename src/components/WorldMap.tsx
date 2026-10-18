@@ -63,18 +63,15 @@ function generateAttackPoint(): AttackPoint {
   };
 }
 
-// Dark cyberpunk style for MapLibre
 const cyberStyle: maplibregl.StyleSpecification = {
   version: 8,
   name: 'CyberTracker Dark',
   sources: {
     'osm-tiles': {
       type: 'raster',
-      tiles: [
-        'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-      ],
+      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
       tileSize: 256,
-      attribution: '© OpenStreetMap contributors'
+      attribution: '© OpenStreetMap'
     }
   },
   layers: [
@@ -86,13 +83,13 @@ const cyberStyle: maplibregl.StyleSpecification = {
       maxzoom: 19,
       paint: {
         'raster-saturation': -1,
-        'raster-brightness-max': 0.3,
-        'raster-brightness-min': 0.05,
-        'raster-contrast': 0.3,
+        'raster-brightness-max': 0.25,
+        'raster-brightness-min': 0.03,
+        'raster-contrast': 0.4,
+        'raster-hue-rotate': 180,
       }
     }
-  ],
-  glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf'
+  ]
 };
 
 export default function WorldMap() {
@@ -106,14 +103,13 @@ export default function WorldMap() {
 
   const getColor = (type: string) => {
     switch (type) {
-      case 'critical': return '#ff3366';
-      case 'high': return '#ff8800';
+      case 'critical': return '#ff006e';
+      case 'high': return '#ff6b00';
       case 'medium': return '#ffcc00';
-      default: return '#00ff88';
+      default: return '#00ff9d';
     }
   };
 
-  // Initialize map
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
@@ -133,7 +129,6 @@ export default function WorldMap() {
       setMapLoaded(true);
     });
 
-    // Initial attacks
     const initialAttacks = Array.from({ length: 15 }, () => generateAttackPoint());
     setAttacks(initialAttacks);
 
@@ -143,28 +138,24 @@ export default function WorldMap() {
     };
   }, []);
 
-  // Add markers when attacks change
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
-    // Clear existing markers
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
 
-    // Add new markers
     attacks.forEach(attack => {
       const color = getColor(attack.type);
       
-      // Create custom marker element
       const el = document.createElement('div');
       el.className = 'attack-marker';
       el.style.cssText = `
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
         border-radius: 50%;
         background: ${color};
-        border: 2px solid white;
-        box-shadow: 0 0 10px ${color}, 0 0 20px ${color};
+        border: 2px solid rgba(255,255,255,0.8);
+        box-shadow: 0 0 15px ${color}, 0 0 30px ${color}, 0 0 45px ${color};
         cursor: pointer;
         animation: pulse-marker 2s infinite;
       `;
@@ -181,7 +172,6 @@ export default function WorldMap() {
     });
   }, [attacks, mapLoaded]);
 
-  // Add new attacks periodically
   useEffect(() => {
     const interval = setInterval(() => {
       setAttacks(prev => {
@@ -195,72 +185,72 @@ export default function WorldMap() {
   }, []);
 
   return (
-    <div className="card-cyber p-5">
+    <div className="glass-card p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-          <i className="fas fa-globe text-cyan-400"></i>
+        <h3 className="text-xl font-bold neon-text-blue font-orbitron flex items-center gap-3">
+          <i className="fas fa-globe"></i>
           Carte Mondiale des Menaces - Temps Réel
         </h3>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="status-dot status-danger animate-blink"></span>
-            <span className="text-xs font-mono text-red-400">LIVE</span>
+            <span className="status-indicator status-danger"></span>
+            <span className="text-xs font-mono neon-text-pink">LIVE</span>
           </div>
           <div className="text-right">
-            <p className="text-sm font-bold text-white font-mono">{totalAttacks.toLocaleString()}</p>
-            <p className="text-[10px] text-gray-400">Attaques/24h</p>
+            <p className="text-2xl font-bold text-white font-orbitron">{totalAttacks.toLocaleString()}</p>
+            <p className="text-[10px] text-gray-400 uppercase tracking-wider">Attaques/24h</p>
           </div>
         </div>
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-3 mb-3">
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded-full bg-[#ff3366]"></div>
-          <span className="text-[10px] text-gray-400">Critique</span>
+      <div className="flex flex-wrap gap-4 mb-4">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-[#ff006e] shadow-[0_0_10px_#ff006e]"></div>
+          <span className="text-[10px] text-gray-400 uppercase tracking-wider">Critique</span>
         </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded-full bg-[#ff8800]"></div>
-          <span className="text-[10px] text-gray-400">Élevé</span>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-[#ff6b00] shadow-[0_0_10px_#ff6b00]"></div>
+          <span className="text-[10px] text-gray-400 uppercase tracking-wider">Élevé</span>
         </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded-full bg-[#ffcc00]"></div>
-          <span className="text-[10px] text-gray-400">Moyen</span>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-[#ffcc00] shadow-[0_0_10px_#ffcc00]"></div>
+          <span className="text-[10px] text-gray-400 uppercase tracking-wider">Moyen</span>
         </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded-full bg-[#00ff88]"></div>
-          <span className="text-[10px] text-gray-400">Faible</span>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-[#00ff9d] shadow-[0_0_10px_#00ff9d]"></div>
+          <span className="text-[10px] text-gray-400 uppercase tracking-wider">Faible</span>
         </div>
       </div>
 
       {/* Map Container */}
-      <div className="relative w-full rounded-lg overflow-hidden border border-gray-800" style={{ height: '500px' }}>
+      <div className="relative w-full rounded-xl overflow-hidden border border-cyan-500/20" style={{ height: '500px' }}>
         <div ref={mapContainer} className="w-full h-full" />
         
         {/* Info overlay */}
-        <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm rounded px-3 py-2 border border-gray-700 z-10">
-          <p className="text-[10px] font-mono text-green-400">SCAN: ACTIF</p>
-          <p className="text-[10px] font-mono text-cyan-400">NODES: 1,247</p>
-          <p className="text-[10px] font-mono text-yellow-400">LATENCE: {Math.floor(Math.random() * 20 + 5)}ms</p>
+        <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md rounded-lg px-4 py-3 border border-cyan-500/30 z-10">
+          <p className="text-[10px] font-mono neon-text-green">SCAN: ACTIF</p>
+          <p className="text-[10px] font-mono neon-text-blue">NODES: 1,247</p>
+          <p className="text-[10px] font-mono neon-text-orange">LATENCE: 12ms</p>
         </div>
 
-        <div className="absolute top-2 right-12 bg-black/70 backdrop-blur-sm rounded px-3 py-2 border border-gray-700 z-10">
-          <p className="text-[10px] font-mono text-red-400">ALERTE: ÉLEVÉE</p>
-          <p className="text-[10px] font-mono text-orange-400">ZONES: 25 ACTIVES</p>
+        <div className="absolute top-3 right-14 bg-black/80 backdrop-blur-md rounded-lg px-4 py-3 border border-pink-500/30 z-10">
+          <p className="text-[10px] font-mono neon-text-pink">ALERTE: ÉLEVÉE</p>
+          <p className="text-[10px] font-mono neon-text-orange">ZONES: 25 ACTIVES</p>
         </div>
 
         {/* Selected attack info */}
         {selectedAttack && (
-          <div className="absolute bottom-2 left-2 right-2 bg-black/80 backdrop-blur-sm rounded-lg p-3 border border-gray-700 z-10">
+          <div className="absolute bottom-3 left-3 right-3 bg-black/90 backdrop-blur-md rounded-xl p-4 border border-cyan-500/30 z-10">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getColor(selectedAttack.type) }}></div>
+                <div className="w-4 h-4 rounded-full shadow-lg" style={{ backgroundColor: getColor(selectedAttack.type), boxShadow: `0 0 15px ${getColor(selectedAttack.type)}` }}></div>
                 <div>
-                  <p className="text-xs font-mono text-white font-bold">{selectedAttack.threat} - {selectedAttack.city}, {selectedAttack.country}</p>
-                  <p className="text-[10px] text-gray-400">IP: {selectedAttack.ip} | Lat: {selectedAttack.lat.toFixed(2)}° Lng: {selectedAttack.lng.toFixed(2)}°</p>
+                  <p className="text-sm font-bold text-white font-orbitron">{selectedAttack.threat} - {selectedAttack.city}, {selectedAttack.country}</p>
+                  <p className="text-[10px] text-gray-400 font-mono">IP: {selectedAttack.ip} | Lat: {selectedAttack.lat.toFixed(2)}° Lng: {selectedAttack.lng.toFixed(2)}°</p>
                 </div>
               </div>
-              <button onClick={() => setSelectedAttack(null)} className="text-gray-400 hover:text-white text-xs">
+              <button onClick={() => setSelectedAttack(null)} className="text-gray-400 hover:text-white transition-colors">
                 <i className="fas fa-times"></i>
               </button>
             </div>
@@ -269,22 +259,22 @@ export default function WorldMap() {
       </div>
 
       {/* Bottom stats */}
-      <div className="grid grid-cols-4 gap-2 mt-3">
-        <div className="text-center p-2 bg-[#0a0e1a] rounded border border-gray-800">
-          <p className="text-sm font-bold text-red-400 font-mono">{attacks.filter(a => a.type === 'critical').length}</p>
-          <p className="text-[9px] text-gray-500">Critiques</p>
+      <div className="grid grid-cols-4 gap-3 mt-4">
+        <div className="text-center p-3 bg-black/40 rounded-lg border border-pink-500/20">
+          <p className="text-xl font-bold neon-text-pink font-orbitron">{attacks.filter(a => a.type === 'critical').length}</p>
+          <p className="text-[9px] text-gray-500 uppercase tracking-wider">Critiques</p>
         </div>
-        <div className="text-center p-2 bg-[#0a0e1a] rounded border border-gray-800">
-          <p className="text-sm font-bold text-orange-400 font-mono">{attacks.filter(a => a.type === 'high').length}</p>
-          <p className="text-[9px] text-gray-500">Élevées</p>
+        <div className="text-center p-3 bg-black/40 rounded-lg border border-orange-500/20">
+          <p className="text-xl font-bold neon-text-blue font-orbitron">{attacks.filter(a => a.type === 'high').length}</p>
+          <p className="text-[9px] text-gray-500 uppercase tracking-wider">Élevées</p>
         </div>
-        <div className="text-center p-2 bg-[#0a0e1a] rounded border border-gray-800">
-          <p className="text-sm font-bold text-yellow-400 font-mono">{attacks.filter(a => a.type === 'medium').length}</p>
-          <p className="text-[9px] text-gray-500">Moyennes</p>
+        <div className="text-center p-3 bg-black/40 rounded-lg border border-yellow-500/20">
+          <p className="text-xl font-bold neon-text-purple font-orbitron">{attacks.filter(a => a.type === 'medium').length}</p>
+          <p className="text-[9px] text-gray-500 uppercase tracking-wider">Moyennes</p>
         </div>
-        <div className="text-center p-2 bg-[#0a0e1a] rounded border border-gray-800">
-          <p className="text-sm font-bold text-green-400 font-mono">{attacks.filter(a => a.type === 'low').length}</p>
-          <p className="text-[9px] text-gray-500">Faibles</p>
+        <div className="text-center p-3 bg-black/40 rounded-lg border border-green-500/20">
+          <p className="text-xl font-bold neon-text-green font-orbitron">{attacks.filter(a => a.type === 'low').length}</p>
+          <p className="text-[9px] text-gray-500 uppercase tracking-wider">Faibles</p>
         </div>
       </div>
     </div>

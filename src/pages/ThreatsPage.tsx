@@ -47,50 +47,48 @@ export default function ThreatsPage() {
 
   const getSeverityColor = (severity: string) => {
     switch(severity) {
-      case 'critical': return 'text-red-400 bg-red-500/20 border-red-500/50';
-      case 'high': return 'text-orange-400 bg-orange-500/20 border-orange-500/50';
-      case 'medium': return 'text-yellow-400 bg-yellow-500/20 border-yellow-500/50';
-      default: return 'text-green-400 bg-green-500/20 border-green-500/50';
+      case 'critical': return 'bg-pink-500/20 text-pink-400 border-pink-500/50';
+      case 'high': return 'bg-orange-500/20 text-orange-400 border-orange-500/50';
+      case 'medium': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50';
+      default: return 'bg-green-500/20 text-green-400 border-green-500/50';
     }
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="card-cyber p-6">
+      <div className="glass-card p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-              <i className="fas fa-skull-crossbones text-red-400"></i>
+            <h2 className="text-3xl font-bold neon-text-pink font-orbitron flex items-center gap-3">
+              <i className="fas fa-skull-crossbones"></i>
               Centre de Commandement des Menaces
             </h2>
-            <p className="text-sm text-gray-400 mt-1">Détection, analyse et neutralisation des cybermenaces en temps réel</p>
+            <p className="text-sm text-gray-400 mt-2">Détection, analyse et neutralisation des cybermenaces en temps réel</p>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-3xl font-bold text-red-400 font-mono">{threats.filter(t => t.status === 'active').length}</p>
-              <p className="text-xs text-gray-400">Menaces Actives</p>
-            </div>
+          <div className="text-right">
+            <p className="text-5xl font-bold neon-text-pink font-orbitron">{threats.filter(t => t.status === 'active').length}</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wider">Menaces Actives</p>
           </div>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/30">
-            <p className="text-2xl font-bold text-red-400 font-mono">{threats.filter(t => t.severity === 'critical').length}</p>
-            <p className="text-xs text-gray-400">Critiques</p>
+          <div className="p-4 bg-pink-500/10 rounded-lg border border-pink-500/30 text-center">
+            <p className="text-3xl font-bold neon-text-pink font-orbitron">{threats.filter(t => t.severity === 'critical').length}</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wider">Critiques</p>
           </div>
-          <div className="p-3 bg-orange-500/10 rounded-lg border border-orange-500/30">
-            <p className="text-2xl font-bold text-orange-400 font-mono">{threats.filter(t => t.severity === 'high').length}</p>
-            <p className="text-xs text-gray-400">Élevées</p>
+          <div className="p-4 bg-orange-500/10 rounded-lg border border-orange-500/30 text-center">
+            <p className="text-3xl font-bold neon-text-blue font-orbitron">{threats.filter(t => t.severity === 'high').length}</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wider">Élevées</p>
           </div>
-          <div className="p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
-            <p className="text-2xl font-bold text-yellow-400 font-mono">{threats.filter(t => t.severity === 'medium').length}</p>
-            <p className="text-xs text-gray-400">Moyennes</p>
+          <div className="p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/30 text-center">
+            <p className="text-3xl font-bold neon-text-purple font-orbitron">{threats.filter(t => t.severity === 'medium').length}</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wider">Moyennes</p>
           </div>
-          <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/30">
-            <p className="text-2xl font-bold text-green-400 font-mono">{threats.filter(t => t.severity === 'low').length}</p>
-            <p className="text-xs text-gray-400">Faibles</p>
+          <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/30 text-center">
+            <p className="text-3xl font-bold neon-text-green font-orbitron">{threats.filter(t => t.severity === 'low').length}</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wider">Faibles</p>
           </div>
         </div>
       </div>
@@ -99,18 +97,16 @@ export default function ThreatsPage() {
       <WorldMap />
 
       {/* Filters */}
-      <div className="card-cyber p-5">
-        <div className="flex flex-wrap gap-4">
+      <div className="glass-card p-5">
+        <div className="flex flex-wrap gap-6">
           <div>
-            <label className="text-xs text-gray-400 block mb-1">Sévérité</label>
+            <label className="text-xs text-gray-400 block mb-2 uppercase tracking-wider font-orbitron">Sévérité</label>
             <div className="flex gap-2">
               {(['all', 'critical', 'high', 'medium', 'low'] as const).map(f => (
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`px-3 py-1 rounded text-xs font-mono transition-all ${
-                    filter === f ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40' : 'bg-gray-800 text-gray-400 hover:text-white'
-                  }`}
+                  className={`cyber-tab text-xs ${filter === f ? 'active' : ''}`}
                 >
                   {f === 'all' ? 'TOUT' : f.toUpperCase()}
                 </button>
@@ -118,15 +114,13 @@ export default function ThreatsPage() {
             </div>
           </div>
           <div>
-            <label className="text-xs text-gray-400 block mb-1">Statut</label>
+            <label className="text-xs text-gray-400 block mb-2 uppercase tracking-wider font-orbitron">Statut</label>
             <div className="flex gap-2">
               {(['all', 'active', 'blocked', 'investigating'] as const).map(s => (
                 <button
                   key={s}
                   onClick={() => setStatusFilter(s)}
-                  className={`px-3 py-1 rounded text-xs font-mono transition-all ${
-                    statusFilter === s ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40' : 'bg-gray-800 text-gray-400 hover:text-white'
-                  }`}
+                  className={`cyber-tab text-xs ${statusFilter === s ? 'active' : ''}`}
                 >
                   {s === 'all' ? 'TOUT' : s.toUpperCase()}
                 </button>
@@ -137,48 +131,48 @@ export default function ThreatsPage() {
       </div>
 
       {/* Threats Table */}
-      <div className="card-cyber p-5">
+      <div className="glass-card p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-white">
+          <h3 className="text-xl font-bold neon-text-blue font-orbitron">
             {filteredThreats.length} Menaces Trouvées
           </h3>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="cyber-table">
             <thead>
-              <tr className="border-b border-gray-800">
-                <th className="text-left text-xs text-gray-400 font-medium pb-2">ID</th>
-                <th className="text-left text-xs text-gray-400 font-medium pb-2">Type</th>
-                <th className="text-left text-xs text-gray-400 font-medium pb-2">Sévérité</th>
-                <th className="text-left text-xs text-gray-400 font-medium pb-2">Source</th>
-                <th className="text-left text-xs text-gray-400 font-medium pb-2">IP</th>
-                <th className="text-left text-xs text-gray-400 font-medium pb-2">Port</th>
-                <th className="text-left text-xs text-gray-400 font-medium pb-2">Statut</th>
-                <th className="text-left text-xs text-gray-400 font-medium pb-2">Heure</th>
+              <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Sévérité</th>
+                <th>Source</th>
+                <th>IP</th>
+                <th>Port</th>
+                <th>Statut</th>
+                <th>Heure</th>
               </tr>
             </thead>
             <tbody>
               {filteredThreats.slice(0, 20).map((threat) => (
-                <tr key={threat.id} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors">
-                  <td className="py-3 text-xs font-mono text-white">{threat.id}</td>
-                  <td className="py-3 text-xs text-gray-300">{threat.type}</td>
-                  <td className="py-3">
-                    <span className={`px-2 py-0.5 text-[10px] font-mono rounded border ${getSeverityColor(threat.severity)}`}>
+                <tr key={threat.id}>
+                  <td className="font-mono text-white font-bold">{threat.id}</td>
+                  <td className="text-gray-300">{threat.type}</td>
+                  <td>
+                    <span className={`px-2 py-1 text-[10px] font-mono rounded border ${getSeverityColor(threat.severity)}`}>
                       {threat.severity.toUpperCase()}
                     </span>
                   </td>
-                  <td className="py-3 text-xs text-gray-400">{threat.source}</td>
-                  <td className="py-3 text-xs font-mono text-cyan-400">{threat.ip}</td>
-                  <td className="py-3 text-xs font-mono text-gray-400">{threat.port}/{threat.protocol}</td>
-                  <td className="py-3">
-                    <span className={`flex items-center gap-1 text-xs ${
-                      threat.status === 'active' ? 'text-red-400' : threat.status === 'blocked' ? 'text-green-400' : 'text-yellow-400'
+                  <td className="text-gray-400">{threat.source}</td>
+                  <td className="font-mono neon-text-blue">{threat.ip}</td>
+                  <td className="font-mono text-gray-400">{threat.port}/{threat.protocol}</td>
+                  <td>
+                    <span className={`flex items-center gap-2 text-xs ${
+                      threat.status === 'active' ? 'neon-text-pink' : threat.status === 'blocked' ? 'neon-text-green' : 'neon-text-orange'
                     }`}>
-                      <span className={`status-dot ${threat.status === 'active' ? 'status-danger' : threat.status === 'blocked' ? 'status-active' : 'status-warning'}`}></span>
+                      <span className={`status-indicator ${threat.status === 'active' ? 'status-danger' : threat.status === 'blocked' ? 'status-active' : 'status-warning'}`}></span>
                       {threat.status.toUpperCase()}
                     </span>
                   </td>
-                  <td className="py-3 text-xs text-gray-500 font-mono">{new Date(threat.timestamp).toLocaleTimeString('fr-FR')}</td>
+                  <td className="text-gray-500 font-mono text-xs">{new Date(threat.timestamp).toLocaleTimeString('fr-FR')}</td>
                 </tr>
               ))}
             </tbody>

@@ -90,19 +90,19 @@ export default function ThreatFeed() {
   }, []);
 
   return (
-    <div className="card-cyber p-5">
+    <div className="glass-card p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-          <i className="fas fa-rss text-orange-400"></i>
-          Feed Menaces - Brave Search API
+        <h3 className="text-xl font-bold neon-text-orange font-orbitron flex items-center gap-3">
+          <i className="fas fa-rss"></i>
+          Feed Menaces - Brave API
         </h3>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <span className="text-[10px] text-gray-400 font-mono">
             MAJ: {lastUpdate.toLocaleTimeString('fr-FR')}
           </span>
           <button
             onClick={() => fetchFeed(activeCategory)}
-            className="p-1.5 rounded bg-gray-800 hover:bg-gray-700 text-cyan-400 transition-colors"
+            className="cyber-button text-xs"
             title="Rafraîchir"
           >
             <i className={`fas fa-sync-alt ${loading ? 'animate-spin' : ''}`}></i>
@@ -119,15 +119,15 @@ export default function ThreatFeed() {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             placeholder="Rechercher une menace, IP, domaine..."
-            className="w-full bg-[#0a0e1a] border border-gray-700 rounded-lg px-4 py-2 text-sm text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none font-mono"
+            className="w-full bg-black/60 border border-cyan-500/30 rounded-lg px-4 py-2 text-sm text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none font-mono focus:shadow-[0_0_20px_rgba(0,240,255,0.2)]"
           />
-          <i className="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+          <i className="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-cyan-500/50"></i>
         </div>
         <button
           onClick={handleSearch}
-          className="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-lg text-white text-sm font-medium hover:from-cyan-500 hover:to-blue-500 transition-all"
+          className="cyber-button"
         >
-          <i className="fas fa-search mr-1"></i>
+          <i className="fas fa-crosshairs mr-1"></i>
           Traquer
         </button>
       </div>
@@ -138,13 +138,9 @@ export default function ThreatFeed() {
           <button
             key={cat.id}
             onClick={() => { setActiveCategory(cat.id); fetchFeed(cat.id); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
-              activeCategory === cat.id
-                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
-                : 'bg-gray-800/50 text-gray-400 hover:text-white border border-gray-700'
-            }`}
+            className={`cyber-tab text-xs whitespace-nowrap ${activeCategory === cat.id ? 'active' : ''}`}
           >
-            <i className={`fas ${cat.icon}`}></i>
+            <i className={`fas ${cat.icon} mr-1`}></i>
             {cat.label}
           </button>
         ))}
@@ -152,8 +148,8 @@ export default function ThreatFeed() {
 
       {/* Error state */}
       {error && (
-        <div className="mb-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-          <p className="text-xs text-red-400 flex items-center gap-2">
+        <div className="mb-3 p-3 bg-pink-500/10 border border-pink-500/30 rounded-lg">
+          <p className="text-xs neon-text-pink flex items-center gap-2">
             <i className="fas fa-exclamation-triangle"></i>
             {error}
           </p>
@@ -165,7 +161,7 @@ export default function ThreatFeed() {
       {loading && (
         <div className="flex items-center justify-center py-8">
           <div className="flex items-center gap-3">
-            <div className="w-5 h-5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
             <span className="text-sm text-gray-400 font-mono">Scan en cours via Brave API...</span>
           </div>
         </div>
@@ -176,7 +172,7 @@ export default function ThreatFeed() {
         <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
           {feed.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              <i className="fas fa-search text-2xl mb-2"></i>
+              <i className="fas fa-search text-3xl mb-2"></i>
               <p className="text-sm">Aucun résultat</p>
             </div>
           ) : (
@@ -186,12 +182,12 @@ export default function ThreatFeed() {
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block p-3 rounded-lg bg-[#0a0e1a] border border-gray-800 hover:border-cyan-500/30 transition-all group"
+                className="block p-3 rounded-lg bg-black/40 border border-gray-800 hover:border-cyan-500/50 transition-all group"
               >
                 <div className="flex items-start gap-2">
                   <i className="fas fa-link text-cyan-400 mt-0.5 text-xs"></i>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-white font-medium group-hover:text-cyan-400 transition-colors truncate">
+                    <p className="text-xs text-white font-medium group-hover:neon-text-blue transition-colors truncate">
                       {item.title}
                     </p>
                     <p className="text-[10px] text-gray-400 mt-1 line-clamp-2">
@@ -199,7 +195,7 @@ export default function ThreatFeed() {
                     </p>
                     <div className="flex items-center gap-2 mt-1.5">
                       <span className="text-[9px] text-gray-500 truncate max-w-[200px]">{item.url}</span>
-                      <span className="text-[9px] px-1.5 py-0.5 bg-purple-500/20 text-purple-400 rounded">
+                      <span className="text-[9px] px-1.5 py-0.5 bg-purple-500/20 text-purple-400 rounded border border-purple-500/30">
                         {item.category}
                       </span>
                     </div>
@@ -212,9 +208,9 @@ export default function ThreatFeed() {
       )}
 
       {/* API Status */}
-      <div className="mt-3 pt-3 border-t border-gray-800 flex items-center justify-between">
+      <div className="mt-3 pt-3 border-t border-cyan-500/20 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className={`status-dot ${error ? 'status-danger' : 'status-active'}`}></span>
+          <span className={`status-indicator ${error ? 'status-danger' : 'status-active'}`}></span>
           <span className="text-[10px] font-mono text-gray-400">
             Brave Search API {error ? 'ERREUR' : 'CONNECTÉE'}
           </span>

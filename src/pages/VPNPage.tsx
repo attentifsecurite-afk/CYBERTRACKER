@@ -19,7 +19,7 @@ const ipGen = () => `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()
 
 export default function VPNPage() {
   const [vpnNodes] = useState<VPNNode[]>(() =>
-    Array.from({ length: 25 }, (_, i) => ({
+    Array.from({ length: 24 }, (_, i) => ({
       id: `VPN-${String(i + 1).padStart(3, '0')}`,
       ip: ipGen(),
       country: countries[Math.floor(Math.random() * countries.length)],
@@ -34,16 +34,15 @@ export default function VPNPage() {
   );
 
   const [protocolFilter, setProtocolFilter] = useState<string>('all');
-
   const filteredNodes = vpnNodes.filter(n => protocolFilter === 'all' || n.protocol === protocolFilter);
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="card-cyber p-6">
-        <h2 className="text-2xl font-bold text-white flex items-center gap-3 mb-2">
-          <i className="fas fa-user-secret text-purple-400"></i>
-          Détection & Analyse VPN/Tor/I2P
+      <div className="glass-card p-6">
+        <h2 className="text-3xl font-bold neon-text-purple font-orbitron flex items-center gap-3 mb-2">
+          <i className="fas fa-user-secret"></i>
+          Détection VPN/Tor/I2P
         </h2>
         <p className="text-sm text-gray-400">
           Identification des nœuds anonymes utilisés par les cybercriminels pour masquer leur identité et localisation.
@@ -51,34 +50,32 @@ export default function VPNPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-          <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/30">
-            <p className="text-2xl font-bold text-red-400 font-mono">{vpnNodes.filter(n => n.status === 'active').length}</p>
-            <p className="text-xs text-gray-400">Actifs</p>
+          <div className="p-4 bg-pink-500/10 rounded-lg border border-pink-500/30 text-center">
+            <p className="text-3xl font-bold neon-text-pink font-orbitron">{vpnNodes.filter(n => n.status === 'active').length}</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wider">Actifs</p>
           </div>
-          <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/30">
-            <p className="text-2xl font-bold text-green-400 font-mono">{vpnNodes.filter(n => n.status === 'blocked').length}</p>
-            <p className="text-xs text-gray-400">Bloqués</p>
+          <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/30 text-center">
+            <p className="text-3xl font-bold neon-text-green font-orbitron">{vpnNodes.filter(n => n.status === 'blocked').length}</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wider">Bloqués</p>
           </div>
-          <div className="p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
-            <p className="text-2xl font-bold text-yellow-400 font-mono">{vpnNodes.filter(n => n.status === 'monitored').length}</p>
-            <p className="text-xs text-gray-400">Surveillés</p>
+          <div className="p-4 bg-orange-500/10 rounded-lg border border-orange-500/30 text-center">
+            <p className="text-3xl font-bold neon-text-orange font-orbitron">{vpnNodes.filter(n => n.status === 'monitored').length}</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wider">Surveillés</p>
           </div>
-          <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/30">
-            <p className="text-2xl font-bold text-purple-400 font-mono">{vpnNodes.length}</p>
-            <p className="text-xs text-gray-400">Total</p>
+          <div className="p-4 bg-purple-500/10 rounded-lg border border-purple-500/30 text-center">
+            <p className="text-3xl font-bold neon-text-purple font-orbitron">{vpnNodes.length}</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wider">Total</p>
           </div>
         </div>
       </div>
 
       {/* Protocol Filter */}
-      <div className="card-cyber p-5">
-        <h3 className="text-sm font-semibold text-white mb-3">Filtrer par Protocole</h3>
+      <div className="glass-card p-5">
+        <h3 className="text-sm font-semibold neon-text-purple font-orbitron mb-3 uppercase tracking-wider">Filtrer par Protocole</h3>
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setProtocolFilter('all')}
-            className={`px-3 py-1.5 rounded text-xs font-mono transition-all ${
-              protocolFilter === 'all' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40' : 'bg-gray-800 text-gray-400 hover:text-white'
-            }`}
+            className={`cyber-tab text-xs ${protocolFilter === 'all' ? 'active' : ''}`}
           >
             TOUS
           </button>
@@ -86,9 +83,7 @@ export default function VPNPage() {
             <button
               key={p}
               onClick={() => setProtocolFilter(p)}
-              className={`px-3 py-1.5 rounded text-xs font-mono transition-all ${
-                protocolFilter === p ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40' : 'bg-gray-800 text-gray-400 hover:text-white'
-              }`}
+              className={`cyber-tab text-xs ${protocolFilter === p ? 'active' : ''}`}
             >
               {p}
             </button>
@@ -99,48 +94,48 @@ export default function VPNPage() {
       {/* Nodes Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredNodes.map((node) => (
-          <div key={node.id} className="card-cyber p-4 hover:border-purple-500/40 transition-all">
+          <div key={node.id} className="glass-card p-4 hover:border-purple-500/50 transition-all">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <span className={`status-dot ${node.status === 'active' ? 'status-danger' : node.status === 'blocked' ? 'status-active' : 'status-warning'}`}></span>
-                <span className="text-xs font-mono text-white">{node.ip}</span>
+                <span className={`status-indicator ${node.status === 'active' ? 'status-danger' : node.status === 'blocked' ? 'status-active' : 'status-warning'}`}></span>
+                <span className="text-xs font-mono text-white font-bold">{node.ip}</span>
               </div>
-              <span className="text-[10px] font-mono px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded">{node.protocol}</span>
+              <span className="text-[10px] font-mono px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded border border-purple-500/30">{node.protocol}</span>
             </div>
 
             <div className="space-y-2 text-xs">
               <div className="flex justify-between">
-                <span className="text-gray-400"><i className="fas fa-globe mr-1"></i>Pays</span>
-                <span className="text-white">{node.country}</span>
+                <span className="text-gray-400"><i className="fas fa-globe mr-1 text-cyan-400"></i>Pays</span>
+                <span className="text-white font-bold">{node.country}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400"><i className="fas fa-link mr-1"></i>Connexions</span>
-                <span className="text-cyan-400 font-mono">{node.connections}</span>
+                <span className="text-gray-400"><i className="fas fa-link mr-1 text-purple-400"></i>Connexions</span>
+                <span className="neon-text-blue font-mono font-bold">{node.connections}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400"><i className="fas fa-clock mr-1"></i>Uptime</span>
+                <span className="text-gray-400"><i className="fas fa-clock mr-1 text-green-400"></i>Uptime</span>
                 <span className="text-white font-mono">{node.uptime}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400"><i className="fas fa-signal mr-1"></i>Bande</span>
+                <span className="text-gray-400"><i className="fas fa-signal mr-1 text-orange-400"></i>Bande</span>
                 <span className="text-white font-mono">{node.bandwidth}</span>
               </div>
             </div>
 
             <div className="mt-3 pt-3 border-t border-gray-800">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] text-gray-400">Score de Risque</span>
-                <span className="text-xs font-mono text-white">{node.riskScore}%</span>
+                <span className="text-[10px] text-gray-400 uppercase tracking-wider">Score de Risque</span>
+                <span className="text-xs font-mono text-white font-bold">{node.riskScore}%</span>
               </div>
-              <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+              <div className="cyber-progress">
                 <div
-                  className={`h-full rounded-full ${node.riskScore > 70 ? 'bg-red-500' : node.riskScore > 40 ? 'bg-orange-500' : 'bg-green-500'}`}
+                  className={`cyber-progress-fill ${node.riskScore > 70 ? 'bg-gradient-to-r from-pink-500 to-red-500' : node.riskScore > 40 ? 'bg-gradient-to-r from-orange-500 to-yellow-500' : 'bg-gradient-to-r from-green-500 to-cyan-500'}`}
                   style={{ width: `${node.riskScore}%` }}
                 ></div>
               </div>
             </div>
 
-            <div className="mt-2 text-[10px] text-gray-500">
+            <div className="mt-2 text-[10px] text-gray-500 font-mono">
               Dernière activité: {node.lastSeen}
             </div>
           </div>
@@ -148,17 +143,17 @@ export default function VPNPage() {
       </div>
 
       {/* Protocol Distribution */}
-      <div className="card-cyber p-5">
-        <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
-          <i className="fas fa-chart-pie text-purple-400"></i>
+      <div className="glass-card p-6">
+        <h3 className="text-xl font-bold neon-text-purple font-orbitron flex items-center gap-3 mb-4">
+          <i className="fas fa-chart-pie"></i>
           Distribution des Protocoles
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {protocols.map(protocol => {
             const count = vpnNodes.filter(n => n.protocol === protocol).length;
             return (
-              <div key={protocol} className="p-3 bg-[#0a0e1a] rounded-lg border border-gray-800 text-center">
-                <p className="text-xl font-bold text-purple-400 font-mono">{count}</p>
+              <div key={protocol} className="p-4 bg-black/40 rounded-lg border border-gray-800 text-center hover:border-purple-500/50 transition-all">
+                <p className="text-2xl font-bold neon-text-purple font-orbitron">{count}</p>
                 <p className="text-xs text-gray-400">{protocol}</p>
               </div>
             );
