@@ -161,7 +161,7 @@ export async function scanArea(
     const searchResult = await searchPlaces(query, center, radius);
     
     const suspiciousPlaces: SuspiciousPlace[] = searchResult.results.map(place => 
-      analyzePlaceRisk(place, Math.floor(Math.random() * 3)) // Simulation des menaces proches
+      analyzePlaceRisk(place, Math.floor(Math.random() * 3))
     );
 
     return suspiciousPlaces.sort((a, b) => b.riskScore - a.riskScore);

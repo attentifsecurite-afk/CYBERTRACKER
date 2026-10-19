@@ -10,19 +10,11 @@ const mapStyle = [
   { elementType: 'labels.text.stroke', stylers: [{ color: '#0a0e1a' }] },
   { elementType: 'labels.text.fill', stylers: [{ color: '#4a5568' }] },
   { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#1e293b' }] },
-  { featureType: 'administrative.land_parcel', elementType: 'labels.text.fill', stylers: [{ color: '#4a5568' }] },
   { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#1e293b' }] },
-  { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#6b7280' }] },
   { featureType: 'poi.park', elementType: 'geometry.fill', stylers: [{ color: '#0f172a' }] },
   { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1e293b' }] },
-  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#4a5568' }] },
   { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#334155' }] },
-  { featureType: 'road.highway', elementType: 'labels.text.fill', stylers: [{ color: '#64748b' }] },
-  { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#1e293b' }] },
-  { featureType: 'transit.station', elementType: 'geometry', stylers: [{ color: '#1e293b' }] },
   { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0c1220' }] },
-  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#1e3a8a' }] },
-  { featureType: 'water', elementType: 'labels.text.stroke', stylers: [{ color: '#0a0e1a' }] }
 ];
 
 const containerStyle = {
@@ -30,14 +22,15 @@ const containerStyle = {
   height: '500px'
 };
 
-const center = {
+const defaultCenter = {
   lat: 30,
   lng: 10
 };
 
 export default function GoogleMaps() {
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    id: 'google-map-script',
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY || '',
   });
 
   const [threats, setThreats] = useState<RealThreat[]>([]);
@@ -45,6 +38,7 @@ export default function GoogleMaps() {
   const [totalAttacks, setTotalAttacks] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [mapError, setMapError] = useState<string | null>(null);
 
   const getColor = (type: string) => {
     switch (type) {
@@ -55,50 +49,66 @@ export default function GoogleMaps() {
     }
   };
 
-  // Récupérer de VRAIES données en temps réel
+  // Charger les données réelles
   useEffect(() => {
-    const loadRealData = async () => {
+    const loadData = async () => {
       setIsLoading(true);
-      
       try {
+        console.log('Chargement des menaces réelles...');
         const realThreats = await fetchRealThreats();
+        console.log('Menaces chargées:', realThreats.length);
         setThreats(realThreats);
         setTotalAttacks(prev => prev + realThreats.length);
         setLastUpdate(new Date());
       } catch (error) {
-        console.error('Erreur chargement données réelles:', error);
+        console.error('Erreur chargement données:', error);
+        setMapError('Erreur de chargement des données');
       } finally {
         setIsLoading(false);
       }
     };
 
-    // Chargement initial
-    loadRealData();
-
-    // Rafraîchir toutes les 30 secondes avec de VRAIES données
-    const interval = setInterval(loadRealData, 30000);
-
+    loadData();
+    const interval = setInterval(loadData, 30000);
     return () => clearInterval(interval);
   }, []);
 
+  // Erreur de chargement Google Maps
   if (loadError) {
+    console.error('Erreur Google Maps:', loadError);
     return (
       <div className="glass-card p-6">
         <div className="text-center py-12">
           <i className="fas fa-exclamation-triangle text-4xl neon-text-pink mb-4"></i>
           <p className="text-lg neon-text-pink font-orbitron">Erreur de chargement Google Maps</p>
           <p className="text-sm text-gray-400 mt-2">Vérifiez votre clé API dans .env</p>
+          <p className="text-xs text-gray-500 mt-4 font-mono">{String(loadError)}</p>
         </div>
       </div>
     );
   }
 
+  // API pas encore chargée
   if (!isLoaded) {
     return (
       <div className="glass-card p-6">
         <div className="text-center py-12">
           <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-lg neon-text-blue font-orbitron">Chargement de Google Maps...</p>
+          <p className="text-xs text-gray-400 mt-2">Vérification de la clé API</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Vérifier si la clé API est présente
+  if (!GOOGLE_MAPS_API_KEY) {
+    return (
+      <div className="glass-card p-6">
+        <div className="text-center py-12">
+          <i className="fas fa-key text-4xl neon-text-orange mb-4"></i>
+          <p className="text-lg neon-text-orange font-orbitron">Clé API Google Maps manquante</p>
+          <p className="text-sm text-gray-400 mt-2">Ajoutez VITE_GOOGLE_MAPS_API_KEY dans .env</p>
         </div>
       </div>
     );
@@ -163,7 +173,7 @@ export default function GoogleMaps() {
       <div className="relative w-full rounded-xl overflow-hidden border border-cyan-500/20">
         <GoogleMap
           mapContainerStyle={containerStyle}
-          center={center}
+          center={defaultCenter}
           zoom={2}
           options={{
             styles: mapStyle,
@@ -175,23 +185,32 @@ export default function GoogleMaps() {
             backgroundColor: '#0a0e1a',
           }}
         >
-          {threats.map((threat) => (
-            <Marker
-              key={threat.id}
-              position={{ lat: threat.lat, lng: threat.lng }}
-              icon={{
-                path: window.google.maps.SymbolPath.CIRCLE,
-                scale: 8,
-                fillColor: getColor(threat.type),
-                fillOpacity: 0.9,
-                strokeColor: '#ffffff',
-                strokeWeight: 2,
-              }}
-              onClick={() => setSelectedThreat(threat)}
-            />
-          ))}
+          {threats.map((threat) => {
+            // Vérifier que les coordonnées sont valides
+            if (!threat.lat || !threat.lng || isNaN(threat.lat) || isNaN(threat.lng)) {
+              console.warn('Coordonnées invalides pour:', threat.id);
+              return null;
+            }
 
-          {selectedThreat && (
+            return (
+              <Marker
+                key={threat.id}
+                position={{ lat: threat.lat, lng: threat.lng }}
+                icon={{
+                  path: window.google.maps.SymbolPath.CIRCLE,
+                  scale: 8,
+                  fillColor: getColor(threat.type),
+                  fillOpacity: 0.9,
+                  strokeColor: '#ffffff',
+                  strokeWeight: 2,
+                }}
+                onClick={() => setSelectedThreat(threat)}
+                title={`${threat.threat} - ${threat.city}`}
+              />
+            );
+          })}
+
+          {selectedThreat && selectedThreat.lat && selectedThreat.lng && (
             <InfoWindow
               position={{ lat: selectedThreat.lat, lng: selectedThreat.lng }}
               onCloseClick={() => setSelectedThreat(null)}
@@ -257,6 +276,16 @@ export default function GoogleMaps() {
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
             <span className="text-xs neon-text-blue font-mono">Récupération de vraies menaces en temps réel...</span>
+          </div>
+        </div>
+      )}
+
+      {/* Error message */}
+      {mapError && (
+        <div className="mt-4 p-3 bg-pink-500/10 rounded-lg border border-pink-500/30">
+          <div className="flex items-center gap-2">
+            <i className="fas fa-exclamation-triangle neon-text-pink"></i>
+            <span className="text-xs neon-text-pink font-mono">{mapError}</span>
           </div>
         </div>
       )}

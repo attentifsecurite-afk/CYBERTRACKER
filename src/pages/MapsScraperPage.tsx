@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { GoogleMap, Marker, InfoWindow, useJsApiLoader } from '@react-google-maps/api';
-import { searchPlaces, analyzePlaceRisk, type GooglePlace, type SuspiciousPlace } from '../services/googleMapsScraper';
+import { searchPlaces, analyzePlaceRisk, type SuspiciousPlace } from '../services/googleMapsScraper';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -8,6 +8,8 @@ const containerStyle = {
   width: '100%',
   height: '500px'
 };
+
+const defaultCenter = { lat: 48.8566, lng: 2.3522 }; // Paris par défaut
 
 const mapStyle = [
   { elementType: 'geometry', stylers: [{ color: '#0a0e1a' }] },
@@ -23,7 +25,8 @@ const mapStyle = [
 
 export default function MapsScraperPage() {
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    id: 'google-map-script-scraper',
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY || '',
     libraries: ['places']
   });
 
@@ -34,18 +37,24 @@ export default function MapsScraperPage() {
   const [scanLocation, setScanLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [scanRadius, setScanRadius] = useState(5000);
   const [scanType, setScanType] = useState<'general' | 'suspicious' | 'threats'>('general');
+  const [scanError, setScanError] = useState<string | null>(null);
 
   const handleScan = async () => {
     if (!query.trim()) return;
 
     setIsScanning(true);
     setPlaces([]);
+    setScanError(null);
 
     try {
-      // Géocoder la requête pour obtenir les coordonnées
+      // Vérifier si Google est disponible
+      if (!window.google || !window.google.maps) {
+        throw new Error('Google Maps non chargé');
+      }
+
       const geocoder = new window.google.maps.Geocoder();
       
-      geocoder.geocode({ address: query }, async (results: google.maps.GeocoderResult[] | null, status: google.maps.GeocoderStatus) => {
+      geocoder.geocode({ address: query }, async (results: any, status: any) => {
         if (status === 'OK' && results && results[0]) {
           const location = {
             lat: results[0].geometry.location.lat(),
@@ -54,7 +63,7 @@ export default function MapsScraperPage() {
           
           setScanLocation(location);
 
-          // Rechercher des lieux
+          // Déterminer la requête de recherche
           let searchQuery = 'business';
           if (scanType === 'suspicious') {
             searchQuery = 'casino OR pawn shop OR nightclub OR money transfer';
@@ -62,21 +71,28 @@ export default function MapsScraperPage() {
             searchQuery = 'internet cafe OR computer repair OR electronics';
           }
 
-          const result = await searchPlaces(searchQuery, location, scanRadius);
-          
-          const suspiciousPlaces = result.results.map(place => 
-            analyzePlaceRisk(place, Math.floor(Math.random() * 5))
-          );
+          try {
+            const result = await searchPlaces(searchQuery, location, scanRadius);
+            
+            const suspiciousPlaces = result.results.map(place => 
+              analyzePlaceRisk(place, Math.floor(Math.random() * 5))
+            );
 
-          setPlaces(suspiciousPlaces);
+            setPlaces(suspiciousPlaces);
+          } catch (err) {
+            console.error('Erreur recherche lieux:', err);
+            setScanError('Erreur lors de la recherche de lieux');
+          }
         } else {
           console.error('Erreur géocodage:', status);
+          setScanError(`Erreur de géocodage: ${status}`);
         }
         
         setIsScanning(false);
       });
     } catch (error) {
       console.error('Erreur scan:', error);
+      setScanError(error instanceof Error ? error.message : 'Erreur inconnue');
       setIsScanning(false);
     }
   };
@@ -99,12 +115,15 @@ export default function MapsScraperPage() {
     }
   };
 
+  // Gestion des erreurs
   if (loadError) {
     return (
       <div className="glass-card p-6">
         <div className="text-center py-12">
           <i className="fas fa-exclamation-triangle text-4xl neon-text-pink mb-4"></i>
           <p className="text-lg neon-text-pink font-orbitron">Erreur de chargement Google Maps</p>
+          <p className="text-sm text-gray-400 mt-2">Vérifiez votre clé API dans .env</p>
+          <p className="text-xs text-gray-500 mt-4 font-mono">{String(loadError)}</p>
         </div>
       </div>
     );
@@ -116,6 +135,18 @@ export default function MapsScraperPage() {
         <div className="text-center py-12">
           <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-lg neon-text-blue font-orbitron">Chargement du Scanner...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!GOOGLE_MAPS_API_KEY) {
+    return (
+      <div className="glass-card p-6">
+        <div className="text-center py-12">
+          <i className="fas fa-key text-4xl neon-text-orange mb-4"></i>
+          <p className="text-lg neon-text-orange font-orbitron">Clé API Google Maps manquante</p>
+          <p className="text-sm text-gray-400 mt-2">Ajoutez VITE_GOOGLE_MAPS_API_KEY dans .env</p>
         </div>
       </div>
     );
@@ -222,6 +253,16 @@ export default function MapsScraperPage() {
         </div>
       </div>
 
+      {/* Error Message */}
+      {scanError && (
+        <div className="glass-card p-4 bg-pink-500/10 border border-pink-500/30">
+          <div className="flex items-center gap-2">
+            <i className="fas fa-exclamation-triangle neon-text-pink"></i>
+            <span className="text-sm neon-text-pink">{scanError}</span>
+          </div>
+        </div>
+      )}
+
       {/* Map and Results */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Map */}
@@ -234,7 +275,7 @@ export default function MapsScraperPage() {
           <div className="relative w-full rounded-xl overflow-hidden border border-cyan-500/20">
             <GoogleMap
               mapContainerStyle={containerStyle}
-              center={scanLocation || { lat: 48.8566, lng: 2.3522 }}
+              center={scanLocation || defaultCenter}
               zoom={scanLocation ? 13 : 2}
               options={{
                 styles: mapStyle,
@@ -244,26 +285,33 @@ export default function MapsScraperPage() {
                 streetViewControl: false,
               }}
             >
-              {places.map((place) => (
-                <Marker
-                  key={place.place_id}
-                  position={{
-                    lat: place.geometry.location.lat,
-                    lng: place.geometry.location.lng
-                  }}
-                  icon={{
-                    path: window.google.maps.SymbolPath.CIRCLE,
-                    scale: 10,
-                    fillColor: getRiskColor(place.category),
-                    fillOpacity: 0.9,
-                    strokeColor: '#ffffff',
-                    strokeWeight: 2,
-                  }}
-                  onClick={() => setSelectedPlace(place)}
-                />
-              ))}
+              {places.map((place) => {
+                // Vérifier les coordonnées
+                if (!place.geometry?.location?.lat || !place.geometry?.location?.lng) {
+                  return null;
+                }
 
-              {selectedPlace && (
+                return (
+                  <Marker
+                    key={place.place_id}
+                    position={{
+                      lat: place.geometry.location.lat,
+                      lng: place.geometry.location.lng
+                    }}
+                    icon={{
+                      path: window.google.maps.SymbolPath.CIRCLE,
+                      scale: 10,
+                      fillColor: getRiskColor(place.category),
+                      fillOpacity: 0.9,
+                      strokeColor: '#ffffff',
+                      strokeWeight: 2,
+                    }}
+                    onClick={() => setSelectedPlace(place)}
+                  />
+                );
+              })}
+
+              {selectedPlace && selectedPlace.geometry?.location && (
                 <InfoWindow
                   position={{
                     lat: selectedPlace.geometry.location.lat,
