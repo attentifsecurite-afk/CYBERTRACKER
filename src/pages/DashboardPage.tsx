@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import WorldMap from '../components/WorldMap';
+import GoogleMaps from '../components/GoogleMaps';
 import ThreatFeed from '../components/ThreatFeed';
 
 interface Threat {
@@ -164,7 +164,7 @@ export default function DashboardPage() {
       </div>
 
       {/* World Map */}
-      <WorldMap />
+      <GoogleMaps />
 
       {/* Feed + Network */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

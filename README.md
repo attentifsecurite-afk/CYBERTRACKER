@@ -10,7 +10,7 @@ Interface de cybersécurité ultra-moderne avec design holographique, glassmorph
 
 ### 📊 Dashboard Principal
 - **Statistiques en temps réel** : Menaces actives, anomalies, nœuds VPN/Tor, sites déréférencés
-- **Carte mondiale interactive** : Visualisation des attaques géolocalisées avec MapLibre GL
+- **Carte mondiale interactive** : Visualisation des attaques géolocalisées avec Google Maps API
 - **Feed de menaces** : Intégration API Brave Search pour intelligence en temps réel
 - **Moniteur réseau** : Paquets/sec, bande passante, connexions, paquets bloqués
 - **Console live** : Logs système en temps réel
@@ -22,8 +22,8 @@ Interface de cybersécurité ultra-moderne avec design holographique, glassmorph
 - **Détails complets** : IP, port, protocole, source, pays, timestamp
 
 ### 🗺️ Carte Monde
-- **MapLibre GL** : Carte interactive avec tuiles OpenStreetMap
-- **Style cyberpunk** : Désaturation, contraste élevé, teintes holographiques
+- **Google Maps API** : Carte interactive avec style sombre personnalisé
+- **Style cyberpunk** : Fond sombre, routes discrètes, teintes holographiques
 - **Marqueurs animés** : Points lumineux avec glow effect et animation pulse
 - **28 villes géolocalisées** : Moscou, Pékin, Pyongyang, Téhéran, Lagos, São Paulo, Mumbai, etc.
 - **Popups détaillées** : Clic sur marqueur = IP, ville, pays, type de menace, coordonnées
@@ -94,6 +94,16 @@ VITE_BRAVE_API_KEY=votre_clé_api_brave
 
 Obtenez une clé API sur : https://brave.com/search/api/
 
+### Google Maps API
+Ajoutez votre clé API Google Maps dans le fichier `.env` :
+```env
+VITE_GOOGLE_MAPS_API_KEY=votre_clé_api_google_maps
+```
+
+Obtenez une clé API sur : https://console.cloud.google.com/google/maps-apis/credentials
+
+**Important** : Activez l'API Maps JavaScript dans votre console Google Cloud.
+
 ### Installation
 ```bash
 npm install
@@ -137,8 +147,7 @@ src/
 - **TypeScript** : Typage statique
 - **Vite** : Build tool ultra-rapide
 - **Tailwind CSS v4** : Styling utility-first
-- **MapLibre GL** : Cartes interactives
-- **OpenStreetMap** : Tuiles de carte gratuites
+- **Google Maps API** : Cartes interactives avec style personnalisé
 - **Brave Search API** : Intelligence cyber
 - **Font Awesome** : Icônes
 
