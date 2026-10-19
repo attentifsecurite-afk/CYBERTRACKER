@@ -1,67 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
-
-interface AttackPoint {
-  id: string;
-  lat: number;
-  lng: number;
-  type: 'critical' | 'high' | 'medium' | 'low';
-  threat: string;
-  country: string;
-  city: string;
-  ip: string;
-  timestamp: Date;
-}
+import { useEffect, useState } from 'react';
+import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
+import { fetchRealThreats, type RealThreat } from '../services/realTimeData';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-
-const attackLocations: { lat: number; lng: number; country: string; city: string }[] = [
-  { lat: 55.75, lng: 37.62, country: 'Russie', city: 'Moscou' },
-  { lat: 39.90, lng: 116.40, country: 'Chine', city: 'Pékin' },
-  { lat: 38.03, lng: 126.98, country: 'Corée du Nord', city: 'Pyongyang' },
-  { lat: 35.69, lng: 51.39, country: 'Iran', city: 'Téhéran' },
-  { lat: 6.52, lng: 3.38, country: 'Nigeria', city: 'Lagos' },
-  { lat: -23.55, lng: -46.63, country: 'Brésil', city: 'São Paulo' },
-  { lat: 19.08, lng: 72.88, country: 'Inde', city: 'Mumbai' },
-  { lat: 50.45, lng: 30.52, country: 'Ukraine', city: 'Kiev' },
-  { lat: 44.43, lng: 26.10, country: 'Roumanie', city: 'Bucarest' },
-  { lat: 21.03, lng: 105.85, country: 'Vietnam', city: 'Hanoï' },
-  { lat: 1.35, lng: 103.82, country: 'Singapour', city: 'Singapour' },
-  { lat: 37.57, lng: 126.98, country: 'Corée du Sud', city: 'Séoul' },
-  { lat: 35.68, lng: 139.69, country: 'Japon', city: 'Tokyo' },
-  { lat: 51.51, lng: -0.13, country: 'UK', city: 'Londres' },
-  { lat: 48.86, lng: 2.35, country: 'France', city: 'Paris' },
-  { lat: 52.52, lng: 13.41, country: 'Allemagne', city: 'Berlin' },
-  { lat: 40.71, lng: -74.01, country: 'USA', city: 'New York' },
-  { lat: 37.77, lng: -122.42, country: 'USA', city: 'San Francisco' },
-  { lat: 43.65, lng: -79.38, country: 'Canada', city: 'Toronto' },
-  { lat: -33.87, lng: 151.21, country: 'Australie', city: 'Sydney' },
-  { lat: 25.20, lng: 55.27, country: 'EAU', city: 'Dubaï' },
-  { lat: -1.29, lng: 36.82, country: 'Kenya', city: 'Nairobi' },
-  { lat: 30.04, lng: 31.24, country: 'Égypte', city: 'Le Caire' },
-  { lat: 14.60, lng: 120.98, country: 'Philippines', city: 'Manille' },
-  { lat: -6.21, lng: 106.85, country: 'Indonésie', city: 'Jakarta' },
-  { lat: 33.89, lng: 35.50, country: 'Liban', city: 'Beyrouth' },
-  { lat: 41.01, lng: 28.98, country: 'Turquie', city: 'Istanbul' },
-  { lat: 13.76, lng: 100.50, country: 'Thaïlande', city: 'Bangkok' },
-];
-
-const threatTypes = ['DDoS', 'Ransomware', 'Phishing', 'Botnet C2', 'Zero-Day', 'Crypto Miner', 'Data Exfil', 'Brute Force'];
-
-function generateAttackPoint(): AttackPoint {
-  const loc = attackLocations[Math.floor(Math.random() * attackLocations.length)];
-  const types: ('critical' | 'high' | 'medium' | 'low')[] = ['critical', 'high', 'medium', 'low'];
-  return {
-    id: `ATK-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-    lat: loc.lat + (Math.random() - 0.5) * 3,
-    lng: loc.lng + (Math.random() - 0.5) * 3,
-    type: types[Math.floor(Math.random() * types.length)],
-    threat: threatTypes[Math.floor(Math.random() * threatTypes.length)],
-    country: loc.country,
-    city: loc.city,
-    ip: `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`,
-    timestamp: new Date(),
-  };
-}
 
 // Style sombre pour Google Maps
 const mapStyle = [
@@ -84,15 +25,26 @@ const mapStyle = [
   { featureType: 'water', elementType: 'labels.text.stroke', stylers: [{ color: '#0a0e1a' }] }
 ];
 
+const containerStyle = {
+  width: '100%',
+  height: '500px'
+};
+
+const center = {
+  lat: 30,
+  lng: 10
+};
+
 export default function GoogleMaps() {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<any>(null);
-  const markersRef = useRef<any[]>([]);
-  const [attacks, setAttacks] = useState<AttackPoint[]>([]);
-  const [selectedAttack, setSelectedAttack] = useState<AttackPoint | null>(null);
-  const [totalAttacks, setTotalAttacks] = useState(2847);
-  const [mapLoaded, setMapLoaded] = useState(false);
-  const [mapError, setMapError] = useState<string | null>(null);
+  const { isLoaded, loadError } = useJsApiLoader({
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+  });
+
+  const [threats, setThreats] = useState<RealThreat[]>([]);
+  const [selectedThreat, setSelectedThreat] = useState<RealThreat | null>(null);
+  const [totalAttacks, setTotalAttacks] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
   const getColor = (type: string) => {
     switch (type) {
@@ -103,117 +55,50 @@ export default function GoogleMaps() {
     }
   };
 
-  // Load Google Maps script
+  // Récupérer de VRAIES données en temps réel
   useEffect(() => {
-    if (!GOOGLE_MAPS_API_KEY) {
-      setMapError('Clé API Google Maps non configurée');
-      return;
-    }
-
-    // Check if Google Maps is already loaded
-    if (window.google && window.google.maps) {
-      setMapLoaded(true);
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&callback=initGoogleMaps`;
-    script.async = true;
-    script.defer = true;
-    
-    window.initGoogleMaps = () => {
-      setMapLoaded(true);
-    };
-
-    script.onerror = () => {
-      setMapError('Erreur de chargement Google Maps');
-    };
-
-    document.head.appendChild(script);
-
-    return () => {
-      // Cleanup
-      delete (window as any).initGoogleMaps;
-    };
-  }, []);
-
-  // Initialize map
-  useEffect(() => {
-    if (!mapLoaded || !mapContainer.current || !window.google || !window.google.maps) return;
-
-    if (mapRef.current) return; // Already initialized
-
-    mapRef.current = new window.google.maps.Map(mapContainer.current, {
-      center: { lat: 30, lng: 10 },
-      zoom: 2,
-      styles: mapStyle,
-      disableDefaultUI: false,
-      zoomControl: true,
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: true,
-      backgroundColor: '#0a0e1a',
-    });
-
-    // Initial attacks
-    const initialAttacks = Array.from({ length: 15 }, () => generateAttackPoint());
-    setAttacks(initialAttacks);
-  }, [mapLoaded]);
-
-  // Update markers when attacks change
-  useEffect(() => {
-    if (!mapRef.current || !window.google || !window.google.maps) return;
-
-    // Clear existing markers
-    markersRef.current.forEach(marker => marker.setMap(null));
-    markersRef.current = [];
-
-    // Add new markers
-    attacks.forEach(attack => {
-      const color = getColor(attack.type);
+    const loadRealData = async () => {
+      setIsLoading(true);
       
-      const marker = new window.google.maps.Marker({
-        position: { lat: attack.lat, lng: attack.lng },
-        map: mapRef.current,
-        icon: {
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 8,
-          fillColor: color,
-          fillOpacity: 0.9,
-          strokeColor: '#ffffff',
-          strokeWeight: 2,
-        },
-        title: `${attack.threat} - ${attack.city}`,
-      });
+      try {
+        const realThreats = await fetchRealThreats();
+        setThreats(realThreats);
+        setTotalAttacks(prev => prev + realThreats.length);
+        setLastUpdate(new Date());
+      } catch (error) {
+        console.error('Erreur chargement données réelles:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-      marker.addListener('click', () => {
-        setSelectedAttack(attack);
-      });
+    // Chargement initial
+    loadRealData();
 
-      markersRef.current.push(marker);
-    });
-  }, [attacks, mapLoaded]);
-
-  // Add new attacks periodically
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAttacks(prev => {
-        const newAttacks = [...prev, generateAttackPoint()];
-        return newAttacks.slice(-30);
-      });
-      setTotalAttacks(prev => prev + Math.floor(Math.random() * 5) + 1);
-    }, 3000);
+    // Rafraîchir toutes les 30 secondes avec de VRAIES données
+    const interval = setInterval(loadRealData, 30000);
 
     return () => clearInterval(interval);
   }, []);
 
-  if (mapError) {
+  if (loadError) {
     return (
       <div className="glass-card p-6">
         <div className="text-center py-12">
           <i className="fas fa-exclamation-triangle text-4xl neon-text-pink mb-4"></i>
-          <p className="text-lg neon-text-pink font-orbitron">{mapError}</p>
+          <p className="text-lg neon-text-pink font-orbitron">Erreur de chargement Google Maps</p>
           <p className="text-sm text-gray-400 mt-2">Vérifiez votre clé API dans .env</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isLoaded) {
+    return (
+      <div className="glass-card p-6">
+        <div className="text-center py-12">
+          <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-lg neon-text-blue font-orbitron">Chargement de Google Maps...</p>
         </div>
       </div>
     );
@@ -224,7 +109,7 @@ export default function GoogleMaps() {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-bold neon-text-blue font-orbitron flex items-center gap-3">
           <i className="fas fa-globe"></i>
-          Carte Mondiale des Menaces - Google Maps
+          Carte Mondiale des Menaces - DONNÉES RÉELLES
         </h3>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
@@ -232,10 +117,26 @@ export default function GoogleMaps() {
             <span className="text-xs font-mono neon-text-pink">LIVE</span>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-bold text-white font-orbitron">{totalAttacks.toLocaleString()}</p>
-            <p className="text-[10px] text-gray-400 uppercase tracking-wider">Attaques/24h</p>
+            <p className="text-2xl font-bold text-white font-orbitron">{totalAttacks}</p>
+            <p className="text-[10px] text-gray-400 uppercase tracking-wider">Menaces Réelles</p>
           </div>
         </div>
+      </div>
+
+      {/* Info temps réel */}
+      <div className="mb-4 p-3 bg-black/40 rounded-lg border border-green-500/30">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="status-indicator status-active"></span>
+            <span className="text-xs neon-text-green font-mono">MODE RÉEL ACTIF</span>
+          </div>
+          <div className="text-xs text-gray-400 font-mono">
+            Dernière MAJ: {lastUpdate.toLocaleTimeString('fr-FR')} | {threats.length} menaces détectées
+          </div>
+        </div>
+        <p className="text-[10px] text-gray-500 mt-1">
+          Données récupérées en temps réel via Brave Search API + Géolocalisation IP réelle
+        </p>
       </div>
 
       {/* Legend */}
@@ -258,60 +159,107 @@ export default function GoogleMaps() {
         </div>
       </div>
 
-      {/* Map Container */}
-      <div className="relative w-full rounded-xl overflow-hidden border border-cyan-500/20" style={{ height: '500px' }}>
-        <div ref={mapContainer} className="w-full h-full" />
-        
+      {/* Google Map */}
+      <div className="relative w-full rounded-xl overflow-hidden border border-cyan-500/20">
+        <GoogleMap
+          mapContainerStyle={containerStyle}
+          center={center}
+          zoom={2}
+          options={{
+            styles: mapStyle,
+            disableDefaultUI: false,
+            zoomControl: true,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: true,
+            backgroundColor: '#0a0e1a',
+          }}
+        >
+          {threats.map((threat) => (
+            <Marker
+              key={threat.id}
+              position={{ lat: threat.lat, lng: threat.lng }}
+              icon={{
+                path: window.google.maps.SymbolPath.CIRCLE,
+                scale: 8,
+                fillColor: getColor(threat.type),
+                fillOpacity: 0.9,
+                strokeColor: '#ffffff',
+                strokeWeight: 2,
+              }}
+              onClick={() => setSelectedThreat(threat)}
+            />
+          ))}
+
+          {selectedThreat && (
+            <InfoWindow
+              position={{ lat: selectedThreat.lat, lng: selectedThreat.lng }}
+              onCloseClick={() => setSelectedThreat(null)}
+            >
+              <div className="bg-black/95 p-3 rounded-lg border border-cyan-500/50 min-w-[250px]">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getColor(selectedThreat.type), boxShadow: `0 0 10px ${getColor(selectedThreat.type)}` }}></div>
+                  <h4 className="text-sm font-bold text-white font-orbitron">{selectedThreat.threat}</h4>
+                </div>
+                <div className="space-y-1 text-xs">
+                  <p className="text-gray-300"><span className="text-gray-500">IP:</span> <span className="neon-text-blue font-mono">{selectedThreat.ip}</span></p>
+                  <p className="text-gray-300"><span className="text-gray-500">Localisation:</span> {selectedThreat.city}, {selectedThreat.country}</p>
+                  <p className="text-gray-300"><span className="text-gray-500">Coordonnées:</span> <span className="font-mono text-[10px]">{selectedThreat.lat.toFixed(4)}, {selectedThreat.lng.toFixed(4)}</span></p>
+                  <p className="text-gray-300"><span className="text-gray-500">Type:</span> <span className="neon-text-orange">{selectedThreat.type.toUpperCase()}</span></p>
+                  <p className="text-gray-300"><span className="text-gray-500">Heure:</span> {selectedThreat.timestamp.toLocaleTimeString('fr-FR')}</p>
+                </div>
+                {selectedThreat.source && (
+                  <a href={selectedThreat.source} target="_blank" rel="noopener noreferrer" className="block mt-2 text-[10px] neon-text-purple hover:underline truncate">
+                    Source: {selectedThreat.source}
+                  </a>
+                )}
+              </div>
+            </InfoWindow>
+          )}
+        </GoogleMap>
+
         {/* Info overlay */}
         <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md rounded-lg px-4 py-3 border border-cyan-500/30 z-10">
-          <p className="text-[10px] font-mono neon-text-green">SCAN: ACTIF</p>
-          <p className="text-[10px] font-mono neon-text-blue">NODES: 1,247</p>
-          <p className="text-[10px] font-mono neon-text-orange">LATENCE: 12ms</p>
+          <p className="text-[10px] font-mono neon-text-green">MODE: RÉEL</p>
+          <p className="text-[10px] font-mono neon-text-blue">API: BRAVE SEARCH</p>
+          <p className="text-[10px] font-mono neon-text-orange">GEO: IP-API.COM</p>
         </div>
 
         <div className="absolute top-3 right-3 bg-black/80 backdrop-blur-md rounded-lg px-4 py-3 border border-pink-500/30 z-10">
           <p className="text-[10px] font-mono neon-text-pink">ALERTE: ÉLEVÉE</p>
-          <p className="text-[10px] font-mono neon-text-orange">ZONES: 25 ACTIVES</p>
+          <p className="text-[10px] font-mono neon-text-orange">MENACES: {threats.length}</p>
         </div>
-
-        {/* Selected attack info */}
-        {selectedAttack && (
-          <div className="absolute bottom-3 left-3 right-3 bg-black/90 backdrop-blur-md rounded-xl p-4 border border-cyan-500/30 z-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-4 h-4 rounded-full shadow-lg" style={{ backgroundColor: getColor(selectedAttack.type), boxShadow: `0 0 15px ${getColor(selectedAttack.type)}` }}></div>
-                <div>
-                  <p className="text-sm font-bold text-white font-orbitron">{selectedAttack.threat} - {selectedAttack.city}, {selectedAttack.country}</p>
-                  <p className="text-[10px] text-gray-400 font-mono">IP: {selectedAttack.ip} | Lat: {selectedAttack.lat.toFixed(2)}° Lng: {selectedAttack.lng.toFixed(2)}°</p>
-                </div>
-              </div>
-              <button onClick={() => setSelectedAttack(null)} className="text-gray-400 hover:text-white transition-colors">
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Bottom stats */}
+      {/* Stats */}
       <div className="grid grid-cols-4 gap-3 mt-4">
         <div className="text-center p-3 bg-black/40 rounded-lg border border-pink-500/20">
-          <p className="text-xl font-bold neon-text-pink font-orbitron">{attacks.filter(a => a.type === 'critical').length}</p>
+          <p className="text-xl font-bold neon-text-pink font-orbitron">{threats.filter(t => t.type === 'critical').length}</p>
           <p className="text-[9px] text-gray-500 uppercase tracking-wider">Critiques</p>
         </div>
         <div className="text-center p-3 bg-black/40 rounded-lg border border-orange-500/20">
-          <p className="text-xl font-bold neon-text-blue font-orbitron">{attacks.filter(a => a.type === 'high').length}</p>
+          <p className="text-xl font-bold neon-text-blue font-orbitron">{threats.filter(t => t.type === 'high').length}</p>
           <p className="text-[9px] text-gray-500 uppercase tracking-wider">Élevées</p>
         </div>
         <div className="text-center p-3 bg-black/40 rounded-lg border border-yellow-500/20">
-          <p className="text-xl font-bold neon-text-purple font-orbitron">{attacks.filter(a => a.type === 'medium').length}</p>
+          <p className="text-xl font-bold neon-text-purple font-orbitron">{threats.filter(t => t.type === 'medium').length}</p>
           <p className="text-[9px] text-gray-500 uppercase tracking-wider">Moyennes</p>
         </div>
         <div className="text-center p-3 bg-black/40 rounded-lg border border-green-500/20">
-          <p className="text-xl font-bold neon-text-green font-orbitron">{attacks.filter(a => a.type === 'low').length}</p>
+          <p className="text-xl font-bold neon-text-green font-orbitron">{threats.filter(t => t.type === 'low').length}</p>
           <p className="text-[9px] text-gray-500 uppercase tracking-wider">Faibles</p>
         </div>
       </div>
+
+      {/* Loading indicator */}
+      {isLoading && (
+        <div className="mt-4 p-3 bg-black/40 rounded-lg border border-cyan-500/30">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-xs neon-text-blue font-mono">Récupération de vraies menaces en temps réel...</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

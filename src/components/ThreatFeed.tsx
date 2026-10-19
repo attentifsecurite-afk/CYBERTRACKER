@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { searchThreats, searchLatestThreats, searchDarkWebLeaks, searchMalwareReports, type BraveSearchResult } from '../services/braveApi';
+import { geolocateIP, type RealThreat } from '../services/realTimeData';
 
 interface ThreatFeedItem {
   title: string;
@@ -7,26 +8,125 @@ interface ThreatFeedItem {
   description: string;
   category: string;
   timestamp: Date;
+  ips?: string[];
+  locations?: { ip: string; country: string; city: string }[];
 }
 
 export default function ThreatFeed() {
   const [feed, setFeed] = useState<ThreatFeedItem[]>([]);
+  const [realThreats, setRealThreats] = useState<RealThreat[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [mode, setMode] = useState<'real' | 'search'>('real');
 
   const categories = [
-    { id: 'all', label: 'Toutes', icon: 'fa-globe' },
-    { id: 'latest', label: 'Dernières', icon: 'fa-bolt' },
+    { id: 'all', label: 'Temps Réel', icon: 'fa-bolt' },
+    { id: 'latest', label: 'Dernières', icon: 'fa-clock' },
     { id: 'darkweb', label: 'Dark Web', icon: 'fa-user-secret' },
     { id: 'malware', label: 'Malware', icon: 'fa-virus' },
   ];
 
-  const fetchFeed = async (category: string) => {
+  // Extraction d'IPs depuis du texte
+  const extractIPs = (text: string): string[] => {
+    const ipRegex = /\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/g;
+    const matches = text.match(ipRegex) || [];
+    return matches.filter(ip => {
+      const parts = ip.split('.').map(Number);
+      return !(parts[0] === 10 || 
+               (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) ||
+               (parts[0] === 192 && parts[1] === 168) ||
+               parts[0] === 127 ||
+               parts[0] === 0);
+    });
+  };
+
+  // Récupérer de VRAIES données en temps réel
+  const fetchRealTimeData = async () => {
     setLoading(true);
     setError(null);
+    setMode('real');
+    
+    try {
+      // Récupérer les dernières menaces via Brave Search
+      const results = await searchLatestThreats();
+      
+      if (results.web?.results) {
+        const feedItems: ThreatFeedItem[] = [];
+        const threats: RealThreat[] = [];
+        
+        for (const result of results.web.results) {
+          const ips = extractIPs(result.title + ' ' + result.description);
+          const locations: { ip: string; country: string; city: string }[] = [];
+          
+          // Géolocaliser les IPs trouvées
+          for (const ip of ips.slice(0, 2)) {
+            const geo = await geolocateIP(ip);
+            if (geo) {
+              locations.push({
+                ip: geo.ip,
+                country: geo.country,
+                city: geo.city
+              });
+              
+              // Déterminer le type de menace
+              const text = (result.title + ' ' + result.description).toLowerCase();
+              let type: 'critical' | 'high' | 'medium' | 'low' = 'low';
+              if (text.includes('ransomware') || text.includes('zero-day')) type = 'critical';
+              else if (text.includes('malware') || text.includes('botnet')) type = 'high';
+              else if (text.includes('phishing') || text.includes('scam')) type = 'medium';
+              
+              threats.push({
+                id: `REAL-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+                ip: geo.ip,
+                lat: geo.lat,
+                lng: geo.lng,
+                country: geo.country,
+                city: geo.city,
+                threat: text.includes('ransomware') ? 'Ransomware' : 
+                       text.includes('phishing') ? 'Phishing' :
+                       text.includes('malware') ? 'Malware' : 'Cyber Threat',
+                type,
+                timestamp: new Date(),
+                source: result.url
+              });
+            }
+          }
+          
+          feedItems.push({
+            title: result.title,
+            url: result.url,
+            description: result.description,
+            category: 'latest',
+            timestamp: new Date(),
+            ips,
+            locations
+          });
+        }
+        
+        setFeed(feedItems);
+        setRealThreats(threats);
+        setLastUpdate(new Date());
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur de connexion API');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchFeed = async (category: string) => {
+    if (category === 'all') {
+      await fetchRealTimeData();
+      return;
+    }
+    
+    setLoading(true);
+    setError(null);
+    setMode('search');
+    
     try {
       let results: BraveSearchResult[] = [];
       
@@ -43,18 +143,18 @@ export default function ThreatFeed() {
           const malwareData = await searchMalwareReports();
           results = malwareData.web?.results || [];
           break;
-        default:
-          const allData = await searchLatestThreats();
-          results = allData.web?.results || [];
       }
 
-      setFeed(results.map(r => ({
+      const feedItems: ThreatFeedItem[] = results.map(r => ({
         title: r.title,
         url: r.url,
         description: r.description,
-        category: category === 'all' ? 'latest' : category,
+        category,
         timestamp: new Date(),
-      })));
+        ips: extractIPs(r.title + ' ' + r.description),
+      }));
+      
+      setFeed(feedItems);
       setLastUpdate(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur de connexion API');
@@ -67,16 +167,22 @@ export default function ThreatFeed() {
     if (!searchQuery.trim()) return;
     setLoading(true);
     setError(null);
+    setMode('search');
+    
     try {
       const data = await searchThreats(searchQuery);
       const results = data.web?.results || [];
-      setFeed(results.map(r => ({
+      
+      const feedItems: ThreatFeedItem[] = results.map(r => ({
         title: r.title,
         url: r.url,
         description: r.description,
         category: 'search',
         timestamp: new Date(),
-      })));
+        ips: extractIPs(r.title + ' ' + r.description),
+      }));
+      
+      setFeed(feedItems);
       setLastUpdate(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur de recherche');
@@ -85,8 +191,13 @@ export default function ThreatFeed() {
     }
   };
 
+  // Chargement initial avec de VRAIES données
   useEffect(() => {
-    fetchFeed('latest');
+    fetchRealTimeData();
+    
+    // Rafraîchir automatiquement toutes les 30 secondes
+    const interval = setInterval(fetchRealTimeData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -94,7 +205,7 @@ export default function ThreatFeed() {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-bold neon-text-orange font-orbitron flex items-center gap-3">
           <i className="fas fa-rss"></i>
-          Feed Menaces - Brave API
+          Feed Menaces RÉELLES - Brave API
         </h3>
         <div className="flex items-center gap-3">
           <span className="text-[10px] text-gray-400 font-mono">
@@ -108,6 +219,24 @@ export default function ThreatFeed() {
             <i className={`fas fa-sync-alt ${loading ? 'animate-spin' : ''}`}></i>
           </button>
         </div>
+      </div>
+
+      {/* Mode indicator */}
+      <div className="mb-4 p-3 bg-black/40 rounded-lg border border-green-500/30">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="status-indicator status-active"></span>
+            <span className="text-xs neon-text-green font-mono">
+              {mode === 'real' ? 'MODE TEMPS RÉEL ACTIF' : 'MODE RECHERCHE'}
+            </span>
+          </div>
+          <div className="text-xs text-gray-400 font-mono">
+            {realThreats.length > 0 && `${realThreats.length} IPs géolocalisées`}
+          </div>
+        </div>
+        <p className="text-[10px] text-gray-500 mt-1">
+          Données réelles via Brave Search API + Géolocalisation IP (ip-api.com)
+        </p>
       </div>
 
       {/* Search bar */}
@@ -162,7 +291,7 @@ export default function ThreatFeed() {
         <div className="flex items-center justify-center py-8">
           <div className="flex items-center gap-3">
             <div className="w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-sm text-gray-400 font-mono">Scan en cours via Brave API...</span>
+            <span className="text-sm text-gray-400 font-mono">Récupération de vraies menaces en temps réel...</span>
           </div>
         </div>
       )}
@@ -193,9 +322,33 @@ export default function ThreatFeed() {
                     <p className="text-[10px] text-gray-400 mt-1 line-clamp-2">
                       {item.description}
                     </p>
+                    
+                    {/* IPs detected */}
+                    {item.ips && item.ips.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {item.ips.slice(0, 3).map((ip, idx) => (
+                          <span key={idx} className="text-[9px] px-1.5 py-0.5 bg-pink-500/20 text-pink-400 rounded border border-pink-500/30 font-mono">
+                            IP: {ip}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* Locations */}
+                    {item.locations && item.locations.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {item.locations.map((loc, idx) => (
+                          <span key={idx} className="text-[9px] px-1.5 py-0.5 bg-purple-500/20 text-purple-400 rounded border border-purple-500/30">
+                            <i className="fas fa-map-marker-alt mr-1"></i>
+                            {loc.city}, {loc.country}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    
                     <div className="flex items-center gap-2 mt-1.5">
                       <span className="text-[9px] text-gray-500 truncate max-w-[200px]">{item.url}</span>
-                      <span className="text-[9px] px-1.5 py-0.5 bg-purple-500/20 text-purple-400 rounded border border-purple-500/30">
+                      <span className="text-[9px] px-1.5 py-0.5 bg-purple-500/20 text-purple-400 rounded">
                         {item.category}
                       </span>
                     </div>
@@ -216,7 +369,7 @@ export default function ThreatFeed() {
           </span>
         </div>
         <span className="text-[10px] font-mono text-gray-500">
-          {feed.length} résultats
+          {feed.length} résultats | {realThreats.length} IPs géolocalisées
         </span>
       </div>
     </div>
