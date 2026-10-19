@@ -31,6 +31,7 @@ export default function GoogleMaps() {
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: GOOGLE_MAPS_API_KEY || '',
+    libraries: ['places']
   });
 
   const [threats, setThreats] = useState<RealThreat[]>([]);

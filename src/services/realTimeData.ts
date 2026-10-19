@@ -24,21 +24,35 @@ export interface IPGeolocation {
   lng: number;
 }
 
-// Géolocalisation d'IP réelle via ip-api.com (gratuit, pas de clé nécessaire)
+// Géolocalisation d'IP réelle via ipapi.co (HTTPS, supporte CORS)
 export async function geolocateIP(ip: string): Promise<IPGeolocation | null> {
   try {
-    const response = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,city,lat,lon`);
+    // Utiliser ipapi.co qui supporte CORS et HTTPS
+    const response = await fetch(`https://ipapi.co/${ip}/json/`);
+    
+    if (!response.ok) {
+      console.warn(`Géolocalisation échouée pour ${ip}: ${response.status}`);
+      return null;
+    }
+    
     const data = await response.json();
     
-    if (data.status === 'success') {
+    if (data.error) {
+      console.warn(`Erreur géolocalisation ${ip}:`, data.reason);
+      return null;
+    }
+    
+    // Vérifier que nous avons les coordonnées
+    if (data.latitude && data.longitude) {
       return {
         ip,
-        country: data.country,
-        city: data.city,
-        lat: data.lat,
-        lng: data.lon
+        country: data.country_name || 'Inconnu',
+        city: data.city || 'Inconnu',
+        lat: data.latitude,
+        lng: data.longitude
       };
     }
+    
     return null;
   } catch (error) {
     console.error('Erreur géolocalisation IP:', error);
@@ -100,19 +114,27 @@ export async function fetchRealThreats(): Promise<RealThreat[]> {
   const threats: RealThreat[] = [];
   
   try {
+    console.log('🔍 Récupération des menaces via Brave Search API...');
+    
     // Rechercher les dernières menaces via Brave Search
     const searchResults = await searchLatestThreats();
     
     if (searchResults.web?.results) {
+      console.log(`✅ ${searchResults.web.results.length} résultats trouvés`);
+      
       for (const result of searchResults.web.results.slice(0, 10)) {
         // Extraire les IPs du titre et de la description
         const ips = extractIPs(result.title + ' ' + result.description);
+        
+        console.log(`📍 ${ips.length} IPs extraites de: ${result.title.substring(0, 50)}...`);
         
         // Si on trouve des IPs, les géolocaliser
         for (const ip of ips.slice(0, 2)) { // Max 2 IPs par résultat
           const geo = await geolocateIP(ip);
           
           if (geo) {
+            console.log(`✅ IP géolocalisée: ${ip} → ${geo.city}, ${geo.country}`);
+            
             threats.push({
               id: `REAL-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
               ip,
@@ -125,13 +147,20 @@ export async function fetchRealThreats(): Promise<RealThreat[]> {
               timestamp: new Date(),
               source: result.url
             });
+          } else {
+            console.warn(`⚠️ Impossible de géolocaliser: ${ip}`);
           }
+          
+          // Petit délai pour éviter le rate limiting
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
       }
     }
     
     // Si pas assez de menaces, chercher des rapports malware
     if (threats.length < 5) {
+      console.log('🔍 Recherche de rapports malware supplémentaires...');
+      
       const malwareResults = await searchMalwareReports();
       
       if (malwareResults.web?.results) {
@@ -155,14 +184,17 @@ export async function fetchRealThreats(): Promise<RealThreat[]> {
                 source: result.url
               });
             }
+            
+            await new Promise(resolve => setTimeout(resolve, 200));
           }
         }
       }
     }
     
+    console.log(`✅ Total: ${threats.length} menaces géolocalisées`);
     return threats;
   } catch (error) {
-    console.error('Erreur récupération menaces réelles:', error);
+    console.error('❌ Erreur récupération menaces réelles:', error);
     return [];
   }
 }

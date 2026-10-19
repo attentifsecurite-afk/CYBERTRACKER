@@ -1,7 +1,6 @@
-// Google Maps Places API Service
-// Inspiré de https://github.com/omkarcloud/google-maps-scraper
-
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+// Google Maps Places Service
+// Utilise la bibliothèque JavaScript Google Maps (Places Library)
+// Fonctionne côté client sans problème CORS
 
 export interface GooglePlace {
   place_id: string;
@@ -29,7 +28,6 @@ export interface GooglePlace {
 export interface PlaceSearchResult {
   results: GooglePlace[];
   status: string;
-  error_message?: string;
 }
 
 export interface SuspiciousPlace extends GooglePlace {
@@ -39,50 +37,149 @@ export interface SuspiciousPlace extends GooglePlace {
   category: 'high_risk' | 'medium_risk' | 'low_risk' | 'safe';
 }
 
-// Rechercher des lieux avec Google Places API
+// Vérifier si Google Maps est disponible
+function checkGoogleMaps(): boolean {
+  if (!window.google || !window.google.maps || !window.google.maps.places) {
+    console.error('❌ Google Maps Places library not loaded');
+    return false;
+  }
+  return true;
+}
+
+// Rechercher des lieux avec Google Places JavaScript API
 export async function searchPlaces(
   query: string,
   location?: { lat: number; lng: number },
   radius: number = 5000
 ): Promise<PlaceSearchResult> {
-  try {
-    let url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${GOOGLE_MAPS_API_KEY}`;
-    
+  return new Promise((resolve, reject) => {
+    if (!checkGoogleMaps()) {
+      reject(new Error('Google Maps Places library not available'));
+      return;
+    }
+
+    // Créer un élément div temporaire pour le service
+    const div = document.createElement('div');
+    div.style.display = 'none';
+    document.body.appendChild(div);
+
+    // Créer une carte temporaire (requise par PlacesService)
+    const map = new window.google.maps.Map(div, {
+      center: location || { lat: 0, lng: 0 },
+      zoom: 10
+    });
+
+    const service = new window.google.maps.places.PlacesService(map);
+
+    const request: any = {
+      query: query,
+      fields: ['place_id', 'name', 'formatted_address', 'geometry', 'types', 'rating', 'user_ratings_total', 'website', 'formatted_phone_number', 'opening_hours', 'price_level', 'business_status']
+    };
+
     if (location) {
-      url += `&location=${location.lat},${location.lng}&radius=${radius}`;
+      request.location = new window.google.maps.LatLng(location.lat, location.lng);
+      request.radius = radius;
     }
 
-    const response = await fetch(url);
-    const data = await response.json();
+    service.textSearch(request, (results: any[], status: any) => {
+      // Nettoyer l'élément temporaire
+      document.body.removeChild(div);
 
-    if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-      throw new Error(data.error_message || 'Erreur API Google Places');
-    }
+      if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
+        const formattedResults: GooglePlace[] = results.map(place => ({
+          place_id: place.place_id,
+          name: place.name,
+          formatted_address: place.formatted_address || '',
+          geometry: {
+            location: {
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng()
+            }
+          },
+          types: place.types || [],
+          rating: place.rating,
+          user_ratings_total: place.user_ratings_total,
+          website: place.website,
+          phone: place.formatted_phone_number,
+          opening_hours: place.opening_hours ? {
+            open_now: place.opening_hours.open_now || false
+          } : undefined,
+          price_level: place.price_level,
+          business_status: place.business_status,
+          vicinity: place.vicinity
+        }));
 
-    return data;
-  } catch (error) {
-    console.error('Erreur recherche lieux:', error);
-    throw error;
-  }
+        resolve({
+          results: formattedResults,
+          status: status
+        });
+      } else if (status === window.google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+        resolve({
+          results: [],
+          status: 'ZERO_RESULTS'
+        });
+      } else {
+        reject(new Error(`Places API error: ${status}`));
+      }
+    });
+  });
 }
 
 // Obtenir les détails d'un lieu
 export async function getPlaceDetails(placeId: string): Promise<GooglePlace | null> {
-  try {
-    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,formatted_address,geometry,types,rating,user_ratings_total,website,formatted_phone_number,opening_hours,price_level,business_status&key=${GOOGLE_MAPS_API_KEY}`;
-    
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (data.status === 'OK') {
-      return data.result;
+  return new Promise((resolve) => {
+    if (!checkGoogleMaps()) {
+      resolve(null);
+      return;
     }
 
-    return null;
-  } catch (error) {
-    console.error('Erreur détails lieu:', error);
-    return null;
-  }
+    const div = document.createElement('div');
+    div.style.display = 'none';
+    document.body.appendChild(div);
+
+    const map = new window.google.maps.Map(div, {
+      center: { lat: 0, lng: 0 },
+      zoom: 10
+    });
+
+    const service = new window.google.maps.places.PlacesService(map);
+
+    service.getDetails(
+      {
+        placeId: placeId,
+        fields: ['name', 'formatted_address', 'geometry', 'types', 'rating', 'user_ratings_total', 'website', 'formatted_phone_number', 'opening_hours', 'price_level', 'business_status']
+      },
+      (place: any, status: any) => {
+        document.body.removeChild(div);
+
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
+          resolve({
+            place_id: place.place_id,
+            name: place.name,
+            formatted_address: place.formatted_address || '',
+            geometry: {
+              location: {
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng()
+              }
+            },
+            types: place.types || [],
+            rating: place.rating,
+            user_ratings_total: place.user_ratings_total,
+            website: place.website,
+            phone: place.formatted_phone_number,
+            opening_hours: place.opening_hours ? {
+              open_now: place.opening_hours.open_now || false
+            } : undefined,
+            price_level: place.price_level,
+            business_status: place.business_status
+          });
+        } else {
+          resolve(null);
+        }
+      }
+    );
+  });
 }
 
 // Analyser si un lieu est suspect
@@ -158,7 +255,11 @@ export async function scanArea(
   query: string = 'business'
 ): Promise<SuspiciousPlace[]> {
   try {
+    console.log(`🔍 Scan de la zone: ${query} (rayon: ${radius}m)`);
+    
     const searchResult = await searchPlaces(query, center, radius);
+    
+    console.log(`✅ ${searchResult.results.length} lieux trouvés`);
     
     const suspiciousPlaces: SuspiciousPlace[] = searchResult.results.map(place => 
       analyzePlaceRisk(place, Math.floor(Math.random() * 3))
@@ -166,7 +267,7 @@ export async function scanArea(
 
     return suspiciousPlaces.sort((a, b) => b.riskScore - a.riskScore);
   } catch (error) {
-    console.error('Erreur scan zone:', error);
+    console.error('❌ Erreur scan zone:', error);
     return [];
   }
 }
@@ -180,11 +281,13 @@ export async function searchSuspiciousBusinesses(
 
   for (const type of businessTypes) {
     try {
+      console.log(`🔍 Recherche: ${type}`);
       const result = await searchPlaces(type, location, 10000);
       const suspicious = result.results.map(place => analyzePlaceRisk(place));
       allPlaces.push(...suspicious);
+      console.log(`✅ ${suspicious.length} résultats pour ${type}`);
     } catch (error) {
-      console.error(`Erreur recherche ${type}:`, error);
+      console.error(`❌ Erreur recherche ${type}:`, error);
     }
   }
 
@@ -196,19 +299,55 @@ export async function getNearbyPlaces(
   threatLocation: { lat: number; lng: number },
   radius: number = 1000
 ): Promise<GooglePlace[]> {
-  try {
-    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${threatLocation.lat},${threatLocation.lng}&radius=${radius}&key=${GOOGLE_MAPS_API_KEY}`;
-    
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (data.status === 'OK') {
-      return data.results;
+  return new Promise((resolve) => {
+    if (!checkGoogleMaps()) {
+      resolve([]);
+      return;
     }
 
-    return [];
-  } catch (error) {
-    console.error('Erreur lieux proches:', error);
-    return [];
-  }
+    const div = document.createElement('div');
+    div.style.display = 'none';
+    document.body.appendChild(div);
+
+    const map = new window.google.maps.Map(div, {
+      center: threatLocation,
+      zoom: 15
+    });
+
+    const service = new window.google.maps.places.PlacesService(map);
+
+    service.nearbySearch(
+      {
+        location: new window.google.maps.LatLng(threatLocation.lat, threatLocation.lng),
+        radius: radius,
+        fields: ['place_id', 'name', 'formatted_address', 'geometry', 'types', 'rating', 'user_ratings_total', 'website', 'formatted_phone_number']
+      },
+      (results: any[], status: any) => {
+        document.body.removeChild(div);
+
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
+          const formattedResults: GooglePlace[] = results.map(place => ({
+            place_id: place.place_id,
+            name: place.name,
+            formatted_address: place.formatted_address || place.vicinity || '',
+            geometry: {
+              location: {
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng()
+              }
+            },
+            types: place.types || [],
+            rating: place.rating,
+            user_ratings_total: place.user_ratings_total,
+            website: place.website,
+            phone: place.formatted_phone_number
+          }));
+
+          resolve(formattedResults);
+        } else {
+          resolve([]);
+        }
+      }
+    );
+  });
 }
