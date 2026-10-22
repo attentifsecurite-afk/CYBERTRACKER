@@ -6,6 +6,7 @@ import VPNPage from './pages/VPNPage';
 import SEOPage from './pages/SEOPage';
 import IntelPage from './pages/IntelPage';
 import NetworkPage from './pages/NetworkPage';
+import MapsScraperPage from './pages/MapsScraperPage';
 
 function Header() {
   const [time, setTime] = useState(new Date());
@@ -91,6 +92,7 @@ function NavigationTabs({ activeTab, setActiveTab }: { activeTab: string, setAct
     { id: 'dashboard', label: 'Dashboard', icon: 'fa-gauge-high' },
     { id: 'threats', label: 'Menaces', icon: 'fa-skull-crossbones' },
     { id: 'map', label: 'Carte Monde', icon: 'fa-globe' },
+    { id: 'scraper', label: 'Maps Scanner', icon: 'fa-map-marked-alt' },
     { id: 'network', label: 'Réseau', icon: 'fa-network-wired' },
     { id: 'vpn', label: 'VPN/Tor', icon: 'fa-user-secret' },
     { id: 'seo', label: 'SEO/AEO', icon: 'fa-spider' },
@@ -123,6 +125,7 @@ export default function App() {
       case 'dashboard': return <DashboardPage />;
       case 'threats': return <ThreatsPage />;
       case 'map': return <WorldMapPage />;
+      case 'scraper': return <MapsScraperPage />;
       case 'network': return <NetworkPage />;
       case 'vpn': return <VPNPage />;
       case 'seo': return <SEOPage />;
