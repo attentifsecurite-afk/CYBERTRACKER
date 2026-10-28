@@ -416,3 +416,30 @@ body {
   border-bottom: 1px solid rgba(0, 240, 255, 0.05);
   font-size: 13px;
 }
+
+/* Flight Markers */
+.flight-marker {
+  transition: transform 0.3s ease;
+}
+
+.flight-marker:hover {
+  transform: scale(1.5) !important;
+  z-index: 1000;
+}
+
+.flight-marker svg {
+  filter: drop-shadow(0 0 8px #00f0ff);
+}
+
+@keyframes flight-pulse {
+  0%, 100% { 
+    filter: drop-shadow(0 0 5px #00f0ff);
+  }
+  50% { 
+    filter: drop-shadow(0 0 15px #00f0ff);
+  }
+}
+
+.flight-marker svg {
+  animation: flight-pulse 2s ease-in-out infinite;
+}

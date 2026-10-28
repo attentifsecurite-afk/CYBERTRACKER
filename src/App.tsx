@@ -8,6 +8,7 @@ import IntelPage from './pages/IntelPage';
 import NetworkPage from './pages/NetworkPage';
 import MapsScraperPage from './pages/MapsScraperPage';
 import ScraperPage from './pages/ScraperPage';
+import AviationPage from './pages/AviationPage';
 
 function Header() {
   const [time, setTime] = useState(new Date());
@@ -93,6 +94,7 @@ function NavigationTabs({ activeTab, setActiveTab }: { activeTab: string, setAct
     { id: 'dashboard', label: 'Dashboard', icon: 'fa-gauge-high' },
     { id: 'threats', label: 'Menaces', icon: 'fa-skull-crossbones' },
     { id: 'map', label: 'Carte Monde', icon: 'fa-globe' },
+    { id: 'aviation', label: 'Aviation', icon: 'fa-plane' },
     { id: 'scraper', label: 'Maps Scanner', icon: 'fa-map-marked-alt' },
     { id: 'webscraper', label: 'Web Scraper', icon: 'fa-spider' },
     { id: 'network', label: 'Réseau', icon: 'fa-network-wired' },
@@ -127,6 +129,7 @@ export default function App() {
       case 'dashboard': return <DashboardPage />;
       case 'threats': return <ThreatsPage />;
       case 'map': return <WorldMapPage />;
+      case 'aviation': return <AviationPage />;
       case 'scraper': return <MapsScraperPage />;
       case 'webscraper': return <ScraperPage />;
       case 'network': return <NetworkPage />;
