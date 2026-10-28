@@ -1,5 +1,7 @@
 # 🛡️ CYBERTRACKER PRO v5.0
 
+> ⚠️ **SÉCURITÉ** : Ne jamais committer les clés API sur GitHub ! Voir [SECURITY.md](./SECURITY.md) pour les bonnes pratiques.
+
 ## Système de Lutte Anti-Cybercriminalité - MODE RÉEL ACTIF
 
 Interface de cybersécurité ultra-moderne avec **DONNÉES RÉELLES EN TEMPS RÉEL**. Plus de simulation, que du concret !
