@@ -1,4 +1,4 @@
-import GoogleMaps from '../components/GoogleMaps';
+import WorldMap from '../components/WorldMap';
 
 export default function WorldMapPage() {
   return (
@@ -15,7 +15,7 @@ export default function WorldMapPage() {
       </div>
 
       {/* World Map - Full Size */}
-      <GoogleMaps />
+      <WorldMap />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

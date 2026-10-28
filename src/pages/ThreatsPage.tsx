@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import GoogleMaps from '../components/GoogleMaps';
+import WorldMap from '../components/WorldMap';
 
 interface Threat {
   id: string;
@@ -94,7 +94,7 @@ export default function ThreatsPage() {
       </div>
 
       {/* World Map */}
-      <GoogleMaps />
+      <WorldMap />
 
       {/* Filters */}
       <div className="glass-card p-5">
