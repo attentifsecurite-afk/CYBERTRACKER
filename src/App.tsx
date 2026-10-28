@@ -9,6 +9,7 @@ import NetworkPage from './pages/NetworkPage';
 import MapsScraperPage from './pages/MapsScraperPage';
 import ScraperPage from './pages/ScraperPage';
 import AviationPage from './pages/AviationPage';
+import IPTrackerPage from './pages/IPTrackerPage';
 
 function Header() {
   const [time, setTime] = useState(new Date());
@@ -94,6 +95,7 @@ function NavigationTabs({ activeTab, setActiveTab }: { activeTab: string, setAct
     { id: 'dashboard', label: 'Dashboard', icon: 'fa-gauge-high' },
     { id: 'threats', label: 'Menaces', icon: 'fa-skull-crossbones' },
     { id: 'map', label: 'Carte Monde', icon: 'fa-globe' },
+    { id: 'iptracker', label: 'IP Tracker', icon: 'fa-map-marker-alt' },
     { id: 'aviation', label: 'Aviation', icon: 'fa-plane' },
     { id: 'scraper', label: 'Maps Scanner', icon: 'fa-map-marked-alt' },
     { id: 'webscraper', label: 'Web Scraper', icon: 'fa-spider' },
@@ -129,6 +131,7 @@ export default function App() {
       case 'dashboard': return <DashboardPage />;
       case 'threats': return <ThreatsPage />;
       case 'map': return <WorldMapPage />;
+      case 'iptracker': return <IPTrackerPage />;
       case 'aviation': return <AviationPage />;
       case 'scraper': return <MapsScraperPage />;
       case 'webscraper': return <ScraperPage />;
