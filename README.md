@@ -98,28 +98,72 @@ Interface de cybersécurité ultra-moderne avec **DONNÉES RÉELLES EN TEMPS RÉ
 
 ---
 
-## 🔧 Configuration
+## 🔐 Configuration Sécurisée
 
-### 1. Brave Search API
-Créez un fichier `.env` à la racine :
-```env
-VITE_BRAVE_API_KEY=votre_clé_api_brave
+### ⚡ Installation Rapide (Recommandé)
+
+```bash
+# 1. Installer les dépendances
+npm install
+
+# 2. Configurer les clés API (script interactif sécurisé)
+node scripts/secure-setup.js
+
+# 3. Lancer l'application
+npm run dev
 ```
 
-Obtenez une clé API sur : https://brave.com/search/api/
+Le script va :
+- ✅ Vous demander les clés API de manière interactive
+- ✅ Chiffrer les clés avec AES-256-GCM
+- ✅ Créer `.env.encrypted` (peut être commité sur GitHub)
+- ✅ Créer `.env.local` (ignoré par Git, utilisé par Vite)
 
-### 2. Google Maps API
-Ajoutez votre clé API Google Maps dans le fichier `.env` :
-```env
-VITE_GOOGLE_MAPS_API_KEY=votre_clé_api_google_maps
+### 🔧 Configuration Manuelle
+
+Si vous préférez configurer manuellement :
+
+```bash
+# 1. Copier le template
+cp .env.example .env.local
+
+# 2. Éditer avec vos clés
+nano .env.local
+
+# 3. Générer le fichier chiffré
+node scripts/encrypt-config.js
 ```
 
-Obtenez une clé API sur : https://console.cloud.google.com/google/maps-apis/credentials
+### 📁 Fichiers de Configuration
 
-**Important** : Activez l'API Maps JavaScript dans votre console Google Cloud.
+| Fichier | Description | Git |
+|---------|-------------|-----|
+| `.env.local` | Clés en clair (local uniquement) | ❌ Ignoré |
+| `.env.encrypted` | Clés chiffrées (partageable) | ✅ Commité |
+| `.env.example` | Template vide | ✅ Commité |
 
-### 3. Géolocalisation IP
-Aucune configuration nécessaire ! Utilise ip-api.com (gratuit, sans clé).
+### 🔑 Obtenir les Clés API
+
+**Brave Search API** : https://brave.com/search/api/ (2000 requêtes/mois gratuit)
+
+**Google Maps API** : https://console.cloud.google.com/google/maps-apis/credentials
+- Activez "Maps JavaScript API"
+- Restreignez par domaine HTTP
+
+**Scraper API** : Service de web scraping (2 clés pour rotation automatique)
+
+### 🔐 Clé de Chiffrement
+
+Par défaut, une clé par défaut est utilisée. Pour plus de sécurité :
+
+```bash
+export CYBERTRACKER_MASTER_KEY="votre-clé-secrète-32-caractères"
+```
+
+📖 Documentation complète : [scripts/README.md](./scripts/README.md)
+
+### 🌐 Géolocalisation IP
+Aucune configuration nécessaire ! Utilise ipapi.co (gratuit, sans clé, HTTPS).
 
 ---
 

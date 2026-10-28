@@ -36,8 +36,14 @@ lerna-debug.log*
 
 # Environment variables - CRITICAL
 .env
-.env.*
+.env.local
+.env.development
+.env.production
+.env.*.local
+.env.*.development
+.env.*.production
 !.env.example
+!.env.encrypted
 
 # API Keys and secrets
 *.key
