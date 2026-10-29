@@ -120,16 +120,38 @@ export default function AviationPage() {
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
 
-    // Ajouter les nouveaux marqueurs
-    flights.forEach(flight => {
+    // Ajouter les nouveaux marqueurs avec animations avancées
+    flights.forEach((flight, index) => {
       if (!flight.live) return;
 
       const { latitude, longitude, direction } = flight.live;
       if (!latitude || !longitude) return;
 
+      // Créer un conteneur pour le marqueur
+      const container = document.createElement('div');
+      container.style.position = 'relative';
+      container.style.width = '30px';
+      container.style.height = '30px';
+      container.style.display = 'flex';
+      container.style.alignItems = 'center';
+      container.style.justifyContent = 'center';
+      
+      // Effet de lueur pulsée
+      const glow = document.createElement('div');
+      glow.style.cssText = `
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(0,240,255,0.4) 0%, transparent 70%);
+        animation: marker-pulse 2s ease-in-out infinite;
+        animation-delay: ${index * 0.1}s;
+      `;
+      container.appendChild(glow);
+
       // Créer un élément personnalisé pour le marqueur
       const el = document.createElement('div');
-      el.className = 'flight-marker';
+      el.className = 'flight-marker animate-glow-intensify';
       
       const rotation = direction || 0;
       el.style.cssText = `
@@ -138,16 +160,21 @@ export default function AviationPage() {
         cursor: pointer;
         transform: rotate(${rotation}deg);
         transition: transform 0.3s ease;
+        position: relative;
+        z-index: 10;
+        animation: float-marker 3s ease-in-out infinite;
+        animation-delay: ${index * 0.15}s;
       `;
       
-      // SVG d'avion
+      // SVG d'avion avec animation de lueur
       el.innerHTML = `
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="#00f0ff" style="filter: drop-shadow(0 0 5px #00f0ff);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#00f0ff" style="filter: drop-shadow(0 0 8px #00f0ff) drop-shadow(0 0 15px #00f0ff);">
           <path d="M21,16V14L13,9V3.5A1.5,1.5 0 0,0 11.5,2A1.5,1.5 0 0,0 10,3.5V9L2,14V16L10,13.5V19L8,20.5V22L11.5,21L15,22V20.5L13,19V13.5L21,16Z"/>
         </svg>
       `;
+      container.appendChild(el);
 
-      const marker = new maplibregl.Marker({ element: el })
+      const marker = new maplibregl.Marker({ element: container })
         .setLngLat([longitude, latitude])
         .addTo(map.current!);
 
@@ -328,11 +355,29 @@ export default function AviationPage() {
         <div className="relative w-full rounded-xl overflow-hidden border border-cyan-500/20" style={{ height: '600px' }}>
           <div ref={mapContainer} className="w-full h-full" />
           
+          {/* Effet de scan radar */}
+          <div className="absolute inset-0 pointer-events-none z-5">
+            <svg className="w-full h-full animate-scan-sweep" viewBox="0 0 100 100" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="aviationScanGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" style={{ stopColor: '#00f0ff', stopOpacity: 0 }} />
+                  <stop offset="50%" style={{ stopColor: '#00f0ff', stopOpacity: 0.2 }} />
+                  <stop offset="100%" style={{ stopColor: '#00f0ff', stopOpacity: 0 }} />
+                </linearGradient>
+              </defs>
+              <rect x="0" y="0" width="100" height="100" fill="url(#aviationScanGradient)" opacity="0.15" />
+            </svg>
+          </div>
+          
           {/* Overlay */}
           <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md rounded-lg px-4 py-3 border border-cyan-500/30 z-10">
-            <p className="text-[10px] font-mono neon-text-green">API: AVIATIONSTACK</p>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+              <p className="text-[10px] font-mono neon-text-green">API: AVIATIONSTACK</p>
+            </div>
             <p className="text-[10px] font-mono neon-text-cyan">VOLS: {flights.filter(f => f.live).length}</p>
             <p className="text-[10px] font-mono neon-text-orange">MODE: LIVE GPS</p>
+            <p className="text-[10px] font-mono text-gray-400">SCAN: ACTIF</p>
           </div>
 
           {/* Popup vol sélectionné */}

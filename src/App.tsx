@@ -145,11 +145,29 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-black cyber-grid-bg">
-      {/* Animated Background */}
+      {/* Animated Background avec effets de scan */}
       <div className="fixed inset-0 pointer-events-none z-0">
+        {/* Orbes lumineux animés */}
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-float"></div>
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
         <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+        
+        {/* Effet de scan horizontal */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent animate-scan-line" style={{ animationDuration: '8s' }}></div>
+        </div>
+        
+        {/* Grille animée */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `
+              linear-gradient(rgba(0,240,255,0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(0,240,255,0.1) 1px, transparent 1px)
+            `,
+            backgroundSize: '50px 50px',
+            animation: 'data-stream 20s linear infinite'
+          }}></div>
+        </div>
       </div>
 
       <Header />

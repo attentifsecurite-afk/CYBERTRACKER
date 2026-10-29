@@ -234,24 +234,51 @@ export default function WorldMap() {
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
 
-    // Ajouter les nouveaux marqueurs
-    trackedUrls.forEach(trackedUrl => {
+    // Ajouter les nouveaux marqueurs avec animations avancées
+    trackedUrls.forEach((trackedUrl, index) => {
       const color = getStatusColor(trackedUrl.status);
       
+      // Créer un conteneur pour le marqueur avec effet ripple
+      const container = document.createElement('div');
+      container.style.position = 'relative';
+      container.style.width = '40px';
+      container.style.height = '40px';
+      container.style.display = 'flex';
+      container.style.alignItems = 'center';
+      container.style.justifyContent = 'center';
+      
+      // Effet ripple (onde de choc)
+      const ripple = document.createElement('div');
+      ripple.style.cssText = `
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 2px solid ${color};
+        animation: ripple 2s ease-out infinite;
+        animation-delay: ${index * 0.3}s;
+      `;
+      container.appendChild(ripple);
+      
+      // Marqueur principal avec animation
       const el = document.createElement('div');
-      el.className = 'tracked-url-marker';
+      el.className = 'tracked-url-marker animate-marker-pulse';
       el.style.cssText = `
         width: 16px;
         height: 16px;
         border-radius: 50%;
         background: ${color};
         border: 3px solid rgba(255,255,255,0.9);
-        box-shadow: 0 0 20px ${color}, 0 0 40px ${color};
+        box-shadow: 0 0 20px ${color}, 0 0 40px ${color}, 0 0 60px ${color};
         cursor: pointer;
-        animation: pulse-marker 2s infinite;
+        position: relative;
+        z-index: 10;
+        animation: marker-pulse 2s ease-in-out infinite, float-marker 3s ease-in-out infinite;
+        animation-delay: ${index * 0.2}s;
       `;
+      container.appendChild(el);
 
-      const marker = new maplibregl.Marker({ element: el })
+      const marker = new maplibregl.Marker({ element: container })
         .setLngLat([trackedUrl.lng, trackedUrl.lat])
         .addTo(map.current!);
 
@@ -347,11 +374,29 @@ export default function WorldMap() {
         <div className="relative w-full rounded-xl overflow-hidden border border-cyan-500/20" style={{ height: '600px' }}>
           <div ref={mapContainer} className="w-full h-full" />
           
+          {/* Effet de scan radar */}
+          <div className="absolute inset-0 pointer-events-none z-5">
+            <svg className="w-full h-full animate-scan-sweep" viewBox="0 0 100 100" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="scanGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" style={{ stopColor: '#00f0ff', stopOpacity: 0 }} />
+                  <stop offset="50%" style={{ stopColor: '#00f0ff', stopOpacity: 0.3 }} />
+                  <stop offset="100%" style={{ stopColor: '#00f0ff', stopOpacity: 0 }} />
+                </linearGradient>
+              </defs>
+              <rect x="0" y="0" width="100" height="100" fill="url(#scanGradient)" opacity="0.2" />
+            </svg>
+          </div>
+          
           {/* Overlay d'information */}
           <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md rounded-lg px-4 py-3 border border-cyan-500/30 z-10">
-            <p className="text-[10px] font-mono neon-text-green">CARTE: ACTIVE</p>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+              <p className="text-[10px] font-mono neon-text-green">CARTE: ACTIVE</p>
+            </div>
             <p className="text-[10px] font-mono neon-text-blue">SOURCE: OPENSTREETMAP</p>
-            <p className="text-[10px] font-mono neon-text-orange">URLs: {trackedUrls.length}</p>
+            <p className="text-[10px] font-mono neon-text-orange">SCAN: EN COURS</p>
+            <p className="text-[10px] font-mono text-gray-400">URLs: {trackedUrls.length}</p>
           </div>
 
           {/* Popup de l'URL sélectionnée */}

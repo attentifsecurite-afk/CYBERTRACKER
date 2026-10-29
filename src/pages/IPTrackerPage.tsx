@@ -184,25 +184,52 @@ export default function IPTrackerPage() {
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
 
-    // Ajouter les nouveaux marqueurs
-    trackedIPs.forEach(tracked => {
+    // Ajouter les nouveaux marqueurs avec animations avancées
+    trackedIPs.forEach((tracked, index) => {
       const { latitude, longitude } = tracked.data;
       if (!latitude || !longitude) return;
 
+      // Créer un conteneur pour le marqueur avec effet ripple
+      const container = document.createElement('div');
+      container.style.position = 'relative';
+      container.style.width = '40px';
+      container.style.height = '40px';
+      container.style.display = 'flex';
+      container.style.alignItems = 'center';
+      container.style.justifyContent = 'center';
+      
+      // Effet ripple (onde de choc)
+      const ripple = document.createElement('div');
+      ripple.style.cssText = `
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 2px solid #00f0ff;
+        animation: ripple 2s ease-out infinite;
+        animation-delay: ${index * 0.3}s;
+      `;
+      container.appendChild(ripple);
+      
+      // Marqueur principal avec animation
       const el = document.createElement('div');
-      el.className = 'ip-marker';
+      el.className = 'ip-marker animate-marker-pulse';
       el.style.cssText = `
         width: 16px;
         height: 16px;
         border-radius: 50%;
         background: #00f0ff;
-        border: 2px solid white;
-        box-shadow: 0 0 15px #00f0ff, 0 0 30px #00f0ff;
+        border: 3px solid rgba(255,255,255,0.9);
+        box-shadow: 0 0 20px #00f0ff, 0 0 40px #00f0ff, 0 0 60px #00f0ff;
         cursor: pointer;
-        animation: pulse-marker 2s infinite;
+        position: relative;
+        z-index: 10;
+        animation: marker-pulse 2s ease-in-out infinite, float-marker 3s ease-in-out infinite;
+        animation-delay: ${index * 0.2}s;
       `;
+      container.appendChild(el);
 
-      const marker = new maplibregl.Marker({ element: el })
+      const marker = new maplibregl.Marker({ element: container })
         .setLngLat([longitude, latitude])
         .addTo(map.current!);
 
