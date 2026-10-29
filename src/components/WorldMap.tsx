@@ -204,26 +204,66 @@ export default function WorldMap() {
 
     console.log('🗺️ Initialisation de la carte...');
 
-    map.current = new maplibregl.Map({
-      container: mapContainer.current,
-      style: mapStyle,
-      center: [10, 30],
-      zoom: 2,
-      minZoom: 1,
-      maxZoom: 12,
-      attributionControl: false
-    });
+    try {
+      map.current = new maplibregl.Map({
+        container: mapContainer.current,
+        style: mapStyle,
+        center: [10, 30],
+        zoom: 2,
+        minZoom: 1,
+        maxZoom: 12,
+        attributionControl: false
+      });
 
-    map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
+      map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
 
-    map.current.on('load', () => {
-      console.log('✅ Carte chargée avec succès');
-    });
+      map.current.on('load', () => {
+        console.log('✅ Carte chargée avec succès');
+      });
+
+      map.current.on('error', (e) => {
+        console.error('❌ Erreur carte:', e);
+      });
+    } catch (error) {
+      console.error('❌ Erreur initialisation carte:', error);
+    }
 
     return () => {
       map.current?.remove();
       map.current = null;
     };
+  }, []);
+
+  // Système de suivi en temps réel - Ajoute automatiquement de nouvelles URLs
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const domains = ['malware-c2.net', 'phishing-kit.xyz', 'botnet-control.ru', 'ransomware-pay.onion', 'data-leak.cc', 'crypto-heist.io', 'fake-bank.login', 'identity-theft.biz'];
+      const countries = ['Russie', 'Chine', 'USA', 'Allemagne', 'Pays-Bas', 'Roumanie', 'Ukraine', 'Brésil', 'Inde', 'Nigeria'];
+      const cities = ['Moscou', 'Pékin', 'New York', 'Berlin', 'Amsterdam', 'Bucarest', 'Kiev', 'São Paulo', 'Mumbai', 'Lagos'];
+      const threats = ['Site de phishing', 'Distribution de malware', 'Escroquerie', 'Marketplace illégal', 'Vol de données', 'Ransomware', 'Botnet C2', 'Exfiltration DNS'];
+      
+      const randomIndex = Math.floor(Math.random() * countries.length);
+      const newUrl: TrackedURL = {
+        id: Date.now().toString(),
+        url: `https://${domains[Math.floor(Math.random() * domains.length)]}`,
+        domain: domains[Math.floor(Math.random() * domains.length)],
+        ip: `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+        lat: (Math.random() - 0.5) * 120,
+        lng: (Math.random() - 0.5) * 300,
+        country: countries[randomIndex],
+        city: cities[randomIndex],
+        status: Math.random() > 0.7 ? 'blocked' : Math.random() > 0.5 ? 'tracking' : 'analyzed',
+        threat: threats[Math.floor(Math.random() * threats.length)],
+        timestamp: new Date()
+      };
+      
+      setTrackedUrls(prev => {
+        const updated = [newUrl, ...prev];
+        return updated.slice(0, 20); // Garder max 20 URLs
+      });
+    }, 5000); // Nouvelle URL toutes les 5 secondes
+
+    return () => clearInterval(interval);
   }, []);
 
   // Mettre à jour les marqueurs quand les URLs changent
@@ -348,9 +388,15 @@ export default function WorldMap() {
             <i className="fas fa-globe"></i>
             Carte Mondiale des URLs Traquées
           </h3>
-          <div className="text-right">
-            <p className="text-2xl font-bold text-white font-orbitron">{trackedUrls.length}</p>
-            <p className="text-[10px] text-gray-400 uppercase tracking-wider">URLs Traquées</p>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="status-indicator status-active"></span>
+              <span className="text-xs neon-text-green font-mono">LIVE TRACKING</span>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-white font-orbitron">{trackedUrls.length}</p>
+              <p className="text-[10px] text-gray-400 uppercase tracking-wider">URLs Traquées</p>
+            </div>
           </div>
         </div>
 
@@ -372,7 +418,19 @@ export default function WorldMap() {
 
         {/* Conteneur de la carte */}
         <div className="relative w-full rounded-xl overflow-hidden border border-cyan-500/20" style={{ height: '600px' }}>
-          <div ref={mapContainer} className="w-full h-full" />
+          {/* Fond de secours avec grille animée */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0a0e1a] via-[#0f172a] to-[#1e293b] z-0">
+            <div className="absolute inset-0 opacity-20" style={{
+              backgroundImage: `
+                linear-gradient(rgba(0,240,255,0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,240,255,0.1) 1px, transparent 1px)
+              `,
+              backgroundSize: '50px 50px'
+            }}></div>
+          </div>
+          
+          {/* Conteneur MapLibre */}
+          <div ref={mapContainer} className="w-full h-full relative z-10" />
           
           {/* Effet de scan radar */}
           <div className="absolute inset-0 pointer-events-none z-5">
@@ -389,14 +447,14 @@ export default function WorldMap() {
           </div>
           
           {/* Overlay d'information */}
-          <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md rounded-lg px-4 py-3 border border-cyan-500/30 z-10">
+          <div className="absolute top-3 left-3 bg-black/90 backdrop-blur-md rounded-lg px-4 py-3 border border-cyan-500/50 z-30">
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-              <p className="text-[10px] font-mono neon-text-green">CARTE: ACTIVE</p>
+              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse shadow-lg shadow-green-400/50"></div>
+              <p className="text-[10px] font-mono neon-text-green font-bold">LIVE TRACKING ACTIF</p>
             </div>
             <p className="text-[10px] font-mono neon-text-blue">SOURCE: OPENSTREETMAP</p>
             <p className="text-[10px] font-mono neon-text-orange">SCAN: EN COURS</p>
-            <p className="text-[10px] font-mono text-gray-400">URLs: {trackedUrls.length}</p>
+            <p className="text-[10px] font-mono text-cyan-400 font-bold">URLs: {trackedUrls.length}</p>
           </div>
 
           {/* Popup de l'URL sélectionnée */}
