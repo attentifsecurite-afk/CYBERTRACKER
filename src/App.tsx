@@ -11,6 +11,7 @@ import ScraperPage from './pages/ScraperPage';
 import AviationPage from './pages/AviationPage';
 import IPTrackerPage from './pages/IPTrackerPage';
 import FlowAnalysisPage from './pages/FlowAnalysisPage';
+import AIBrainPage from './pages/AIBrainPage';
 
 function Header() {
   const [time, setTime] = useState(new Date());
@@ -99,6 +100,7 @@ function NavigationTabs({ activeTab, setActiveTab }: { activeTab: string, setAct
     { id: 'iptracker', label: 'IP Tracker', icon: 'fa-map-marker-alt' },
     { id: 'aviation', label: 'Aviation', icon: 'fa-plane' },
     { id: 'flowanalysis', label: 'Flow Analysis', icon: 'fa-project-diagram' },
+    { id: 'aibrain', label: 'Cerveau IA', icon: 'fa-brain' },
     { id: 'scraper', label: 'Maps Scanner', icon: 'fa-map-marked-alt' },
     { id: 'webscraper', label: 'Web Scraper', icon: 'fa-spider' },
     { id: 'network', label: 'Réseau', icon: 'fa-network-wired' },
@@ -136,6 +138,7 @@ export default function App() {
       case 'iptracker': return <IPTrackerPage />;
       case 'aviation': return <AviationPage />;
       case 'flowanalysis': return <FlowAnalysisPage />;
+      case 'aibrain': return <AIBrainPage />;
       case 'scraper': return <MapsScraperPage />;
       case 'webscraper': return <ScraperPage />;
       case 'network': return <NetworkPage />;
