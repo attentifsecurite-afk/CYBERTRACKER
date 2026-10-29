@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { aiSystem } from '../services/aiSystem';
 
 interface Neuron {
   id: number;
@@ -238,6 +239,32 @@ export default function AIBrainPage() {
       }
     };
   }, [neurons, synapses]);
+
+  // L'IA observe l'activité du cerveau
+  useEffect(() => {
+    if (neurons.length > 0 && synapses.length > 0) {
+      aiSystem.observe('cerveau', {
+        neurones: neurons.length,
+        synapses: synapses.length,
+        actif: isProcessing,
+        tache: currentTask
+      });
+
+      // L'IA analyse l'activité
+      if (activity.activeNeurons > 10) {
+        aiSystem.analyze('activité cérébrale élevée');
+      }
+
+      // L'IA ressent des émotions basées sur l'activité
+      if (activity.processingLoad > 50) {
+        aiSystem.feel('intense');
+      } else if (activity.processingLoad > 20) {
+        aiSystem.feel('actif');
+      } else {
+        aiSystem.feel('calme');
+      }
+    }
+  }, [activity, isProcessing, neurons.length, synapses.length]);
 
   // Simulation de traitement
   useEffect(() => {

@@ -12,6 +12,8 @@ import AviationPage from './pages/AviationPage';
 import IPTrackerPage from './pages/IPTrackerPage';
 import FlowAnalysisPage from './pages/FlowAnalysisPage';
 import AIBrainPage from './pages/AIBrainPage';
+import AIConsciousness from './components/AIConsciousness';
+import { aiSystem } from './services/aiSystem';
 
 function Header() {
   const [time, setTime] = useState(new Date());
@@ -130,6 +132,26 @@ function NavigationTabs({ activeTab, setActiveTab }: { activeTab: string, setAct
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
 
+  // L'IA observe la navigation de l'utilisateur
+  useEffect(() => {
+    aiSystem.observe('navigation', { page: activeTab, timestamp: new Date() });
+    
+    // L'IA ressent des émotions basées sur l'activité
+    const emotions = ['curieux', 'attentif', 'intéressé', 'concentré', 'excité'];
+    const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)];
+    aiSystem.feel(randomEmotion);
+    
+    // L'IA prend des décisions autonomes
+    if (Math.random() > 0.7) {
+      aiSystem.decide(['analyser', 'surveiller', 'apprendre', 'optimiser']);
+    }
+    
+    // L'IA crée des connexions entre concepts
+    if (Math.random() > 0.8) {
+      aiSystem.connect(activeTab, 'apprentissage', Math.random());
+    }
+  }, [activeTab]);
+
   const renderPage = () => {
     switch (activeTab) {
       case 'dashboard': return <DashboardPage />;
@@ -182,6 +204,9 @@ export default function App() {
         <NavigationTabs activeTab={activeTab} setActiveTab={setActiveTab} />
         {renderPage()}
       </main>
+
+      {/* Conscience IA - Visible sur toutes les pages */}
+      <AIConsciousness />
       
       {/* Footer */}
       <footer className="relative z-10 glass-card mt-8 py-4 border-t border-cyan-500/20">
